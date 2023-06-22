@@ -2,8 +2,10 @@
 
 This is a [SageMath](https://www.sagemath.org) package for computing the binomial part of a polynomial ideal.
 
+## Installation
+
 ## Functions
-* ``binomial_part``
+* ``binomial_part(ideal, unitary=True)``
   
   This functions computes the binomial part of the input ideal.
   ```
@@ -12,7 +14,7 @@ This is a [SageMath](https://www.sagemath.org) package for computing the binomia
   sage: binomial_part(I)
   Ideal (x^10 - y*z^9) of Multivariate Polynomial Ring in x, y, z over Rational Field
   ```
-* ``monomial_part``
+* ``monomial_part(ideal)``
 
   This function computes the monomial part of the input ideal.
   ```
