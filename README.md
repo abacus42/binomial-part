@@ -7,7 +7,8 @@ This is a [SageMath](https://www.sagemath.org) package for computing the binomia
 ## Functions
 * ``binomial_part(ideal, unitary=True)``
   
-  This function computes the binomial part of the input ideal.
+  This function computes the binomial part of the input ideal. By default it only computes the unitary binomial part of I.
+  To compute the full binomial part the second parameter has to be set to false.
   ```
   sage: R.<x,y,z> = QQ[]
   sage: I = R.ideal((x-z)^2, 10*x-y-9*z)
@@ -16,7 +17,7 @@ This is a [SageMath](https://www.sagemath.org) package for computing the binomia
   ```
 * ``binomial_part_saturated(ideal, unitary=True)``
 
-  This function computes the binomial part of an ideal which is saturated with respect to the product of all indeterminates
+  This function computes the binomial part of an ideal which is saturated with respect to the product of all indeterminates.
   ```
   sage: R.<x,y,z> = QQ[]
   sage: I = R.ideal((x-z)^2, 10*x-y-9*z)
@@ -35,7 +36,7 @@ This is a [SageMath](https://www.sagemath.org) package for computing the binomia
 
 * ``exponent_lattice_finite_field(ideal, elements)``
 
-  This function computes the exponent lattice in a finite field given by a polynomial ring modulo the input ideal.
+  This function computes the exponent lattice in a finite field given by a polynomial ring modulo a maximal zero-dimensional ideal.
   ```
   sage: R.<x,y> = GF(7)[]
   sage: I = R.ideal(x-y+1, y^2-3*y+1)
