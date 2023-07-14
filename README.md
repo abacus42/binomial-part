@@ -34,13 +34,13 @@ This is a [SageMath](https://www.sagemath.org) package for computing the binomia
   Ideal (x*y*z) of Multivariate Polynomial Ring in x, y, z over Rational Field
   ```
 
-* ``exponent_lattice_finite_field(ideal, elements)``
+* ``exponent_lattice_finite_field_max(ideal, elements)``
 
   This function computes the exponent lattice in a finite field given by a polynomial ring modulo a maximal zero-dimensional ideal.
   ```
   sage: R.<x,y> = GF(7)[]
   sage: I = R.ideal(x-y+1, y^2-3*y+1)
-  sage: exponent_lattice_finite_field(I, [x,y])
+  sage: exponent_lattice_finite_field_max(I, [x,y])
   Free module of degree 2 and rank 2 over Integer Ring
   User basis matrix:
   [-2  1]
