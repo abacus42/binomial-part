@@ -186,3 +186,13 @@ def process_factorizations(elements :list):
         factorizations.append(factors);
         all_factors = all_factors.union(set([tup[0] for tup in factors]));
     return factorizations, all_factors;
+
+def my_saturation(I,J):
+    i = 0
+    old = I
+    sat = I.quotient(J)
+    while sat != old:
+        i += 1
+        old = sat
+        sat = sat.quotient(J)
+    return (sat, i)

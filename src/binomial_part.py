@@ -55,8 +55,8 @@ def cellular_decomposition(I):
     for i in range(len(indets)):
         decompositions_new = [];
         for el in decompositions:
-            sat = el.ideal.saturation(R.ideal(indets[i]));
-            if sat[1].is_zero():
+            sat = my_saturation(el.ideal, R.ideal(indets[i]));
+            if sat[1] == 0:
                 el.add_cellular(indets[i]);
                 decompositions_new.append(el);
             elif sat[0].is_one():
@@ -145,7 +145,7 @@ def binomial_part(I, unitary=True):
                                 K = K.elimination_ideal(list(X.difference(Y)));
                                 sat = binomial_part_saturated(K, unitary);
                                 if not sat.is_zero():
-                                    sum_st_binomials += [pair[0]*f for f in binomial_part_saturated(K).gens()];
+                                    sum_st_binomials += [pair[0]*f for f in sat.gens()];
                             else:
                                 st_bins = st_binomials(s, t, K, list(Y), unitary);
                                 sum_st_binomials += [gcd(pair)*f for f in st_bins];
@@ -221,7 +221,7 @@ def st_binomials(s,t, I, cellular : list, unitary = True):
     """
     assert s not in I, "s is contained in I"
     assert t not in I, "t is contained in I"
-    assert I.saturation(prod(cellular))[1].is_zero(), "I is not saturated w.r.t. to the indets in cellular"
+    assert I.quotient(I.ring().ideal(prod(cellular))) == I, "I is not saturated w.r.t. to the indets in cellular"
     #
     if len(cellular) == 0:
         if s-t in I:
@@ -274,7 +274,7 @@ def st_binomials(s,t, I, cellular : list, unitary = True):
 def binomial_part_saturated(I, unitary=True):
     """ Computes the binomial part of an ideal I which is saturated wrt the product of indeterminates """
     R = I.ring()
-    assert I.saturation(R.ideal(prod(R.gens())))[1] == 0, "I is not saturated wrt the indeterminates"
+    assert I.quotient(R.ideal(prod(R.gens()))) == I, "I is not saturated wrt the indeterminates"
     #
     if I.is_zero() or I.is_one():
         return I
@@ -354,7 +354,7 @@ def reduction_to_zero_dim(I, elems : list):
        A list of zero-dimensional ideals
     """
     R = I.ring();
-    assert I.saturation(R.ideal(prod(elems)))[1] == 0;
+    assert I.quotient(R.ideal(prod(elems))) == I,"I is not saturated wrt the indeterminates"
     #
     I = R.ideal(I.groebner_basis());
     indep_indices = singular(I).indepSet().sage();
@@ -393,7 +393,7 @@ def exponent_lattice(I, elems : list):
     Returns:
         The lattice of 'elems' modulo I
     """
-    assert I.saturation(I.ring().ideal(prod(elems)))[1] == 0, "I is not saturated wrt 'elems'"
+    assert I.quotient(I.ring().ideal(prod(elems))) == I, "I is not saturated wrt 'elems'"
     assert not I.is_one(), "I should be a proper ideal, but I = (1)"
     #
     if I.is_zero():
@@ -424,7 +424,7 @@ def unit_lattice(I, elems):
     Returns:
         The unit lattice of 'elems' modulo I together with the associated character
     """
-    assert I.saturation(I.ring().ideal(prod(elems)))[1] == 0, "I is not saturated wrt 'elems'"
+    assert I.quotient(I.ring().ideal(prod(elems))) == I, "I is not saturated wrt 'elems'"
     assert not I.is_one(), "I should be a proper ideal, but I = (1)"
     #
     if I.is_zero():
@@ -453,7 +453,7 @@ def unit_lattice_zero_dim(I, elems :list):
         The unit lattice of 'elems' modulo I together with the associated character
     """
     assert I.dimension().is_zero(), "I is not zero-dimensional"
-    assert I.saturation(I.ring().ideal(prod(elems)))[1] == 0, "I is not saturated wrt the product of 'elems'"
+    assert I.quotient(I.ring().ideal(prod(elems))) == I, "I is not saturated wrt the product of 'elems'"
     # compute a basis of K(U)[X]/I as K(U) vector space
     basis = I.normal_basis();
     dim = len(basis);
