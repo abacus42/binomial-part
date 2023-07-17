@@ -457,16 +457,15 @@ def unit_lattice_zero_dim(I, elems :list):
     # compute a basis of K(U)[X]/I as K(U) vector space
     basis = I.normal_basis();
     dim = len(basis);
-    determinants = mult_matrices_dets(I, basis, elems);
+    determinants = [multiplication_matrix_det(I, basis, elem) for elem in elems]
     R = I.ring()
     R_extended = PolynomialRing(R.base_ring(), R.variable_names()+tuple(['det_sqrt%s'%k for k in range(1, len(elems)+1)]))
     I_extended = I.change_ring(R_extended);
     det_sqrt_indets = R_extended.gens()[R.ngens():(R.ngens()+len(elems))];
     # extend field with the square roots of the determinants
     for i in range(len(elems)):
-        red_det, exp = min_exp(determinants[i].numerator(), dim);
+        red_det, exp = min_exp(determinants[i], dim);
         I_extended += R_extended.ideal(det_sqrt_indets[i]**exp*red_det-1);
-        # I_extended += ideal(det_sqrt_indets[i]**dim*determinants[i]-1);
     # divide the elements by the square roots of the determinants
     new_elems = [a*b for a,b in zip(elems, det_sqrt_indets)];
     root = generator_nth_roots_of_unity(R.base_ring().base_ring(), dim)
@@ -476,11 +475,16 @@ def unit_lattice_zero_dim(I, elems :list):
         lattice = IntegerLattice(projected_gens)
     else:
         lattice = exponent_lattice_zero_dim(I_extended, new_elems);
-    if R.base_ring().base_ring() != R.base_ring():
+    coeff_ring = R.base_ring()
+    if coeff_ring.base_ring() != coeff_ring:
         # map determinants from K(U) to K[U]
-        field_elems = [det.numerator() for det in determinants]
-        field_elems_coeffs = [f.lc() for f in field_elems];
-        field_elems = [(f/f.lc())**dim for f in field_elems];
+        field_elems = []
+        field_elems_coeffs = []
+        for det in determinants:
+            num_coeff = det.numerator().lc()
+            denom_coeff = det.denominator().lc()
+            field_elems.append(coeff_ring(((det.numerator()/num_coeff)/(det.denominator()/denom_coeff))**dim))
+            field_elems_coeffs.append(num_coeff/denom_coeff)
         lattice = lattice.intersection(exponent_lattice_polynomials(field_elems))
     images = [];
     for gen in lattice.gens():
@@ -566,26 +570,21 @@ def is_unitary_binomial(I):
     return True;
 
 
-def mult_matrices_dets(I, basis : list, elems : list):
+def multiplication_matrix_det(I, basis : list, element):
     """
-    Computes the determinants of the multiplication matrices given by multiplication with the elements in 'elems'
+    Computes the determinant of the multiplication matrices given by multiplication with the element
     Args:
         I: A zero-dimensional ideal
-        elems: A list of polynomials s.t. their residue classes in P/I are invertible
+        element: A polynomial s.t. its residue class in P/I is invertible
         basis: A list of polynomial forming a vector space basis of P/I
     Returns:
-        The determinants of the multiplication matrices
+        The determinant of the multiplication matrix
     """
-    images_list = [];
-    for el in elems:
-        images_list.append([(b*el).reduce(I) for b in basis]);
-    determinants = [];
-    for images in images_list:
-        mat = [];
-        for image in images:
-            mat.append([image.monomial_coefficient(b) for b in basis]);
-        determinants.append(matrix(mat).det());
-    return determinants;
+    images = [(b*element).reduce(I) for b in basis]
+    mat = [];
+    for image in images:
+        mat.append([image.monomial_coefficient(b) for b in basis])
+    return matrix(mat).det()
 
 
 def intersection_wrt_character(field, lattice1, lattice2, images1, images2):
@@ -624,8 +623,15 @@ def intersection_wrt_character(field, lattice1, lattice2, images1, images2):
 
 
 def exponent_lattice_polynomials(elements :list):
-    coeffs = [f.lc() for f in elements];
-    cleared_elements = [f/f.lc() for f in elements];
+    cleared_elements = []
+    coeffs = []
+    for el in elements:
+        num_coeff = el.numerator().lc()
+        denom_coeff = el.denominator().lc()
+        cleared_numerator = (el.numerator())/num_coeff
+        cleared_denominator = (el.denominator())/denom_coeff
+        cleared_elements.append(cleared_numerator/cleared_denominator)
+        coeffs.append(num_coeff/denom_coeff)
     factorizations, all_factors = process_factorizations(cleared_elements);
     system = [];
     for factor in all_factors:
@@ -654,7 +660,11 @@ def min_exp(el, exp):
         divs = Integer(exp).divisors()[1:];
         while i < len(divs) and not found:
             try:
-               el = el.nth_root(divs[i]);
+                num = el.numerator()
+                denom = el.denominator()
+                num_root = num.nth_root(divs[i])
+                denom_root = denom.nth_root(divs[i])
+                el = num_root/denom_root
             except (ValueError):
                 pass
             else:

@@ -187,7 +187,7 @@ def exponent_lattice_number_field_max(I, elems):
     for reprs in representations:
         repr_a = sum([a**i*reprs[i] for i in range(len(reprs))]);
         elems_in_a.append(repr_a);
-    return IntegerLattice(exponent_lattice_number_field(K, elems_in_a));
+    return exponent_lattice_number_field(K, elems_in_a);
 
 
 def integral_unit_lattice(K, elements):
@@ -253,4 +253,4 @@ def exponent_lattice_number_field(K, elements):
             summand = [row[i]*x for x in submodule.basis()[i]];
             gen = [a+b for a,b in zip(gen, summand)];
         lattice_gens.append(gen);
-    return matrix(lattice_gens);
+    return IntegerLattice(matrix(lattice_gens))

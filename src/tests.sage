@@ -126,6 +126,13 @@ assert binomial_part(I, False) == I, str(I)
 I = R.ideal(x^3-3*y^3)
 assert binomial_part(I, False) == I, str(I)
 
+I = R.ideal(x^2*y^2 - 2*x*y + 2)
+assert binomial_part(I, False) == R.ideal(x^4*y^4+4), str(I)
+
+R.<x,y,z> = QQ[]
+I = R.ideal(x^2*y^4-2*x*y^2*z+2*z^2)
+assert binomial_part(I, False) == R.ideal(x^4*y^8+4*z^4), str(I)
+
 #I = R.ideal(x^2+5, y^3-2)
 #assert binomial_part(I, False) == I, str(I)
 
