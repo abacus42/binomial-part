@@ -483,7 +483,7 @@ def unit_lattice_zero_dim(I, elems :list):
         for det in determinants:
             num_coeff = det.numerator().lc()
             denom_coeff = det.denominator().lc()
-            field_elems.append(coeff_ring(((det.numerator()/num_coeff)/(det.denominator()/denom_coeff))**dim))
+            field_elems.append(coeff_ring((det.numerator()/num_coeff)/(det.denominator()/denom_coeff)))
             field_elems_coeffs.append(num_coeff/denom_coeff)
         lattice = lattice.intersection(exponent_lattice_polynomials(field_elems))
     images = [];
