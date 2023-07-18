@@ -605,12 +605,12 @@ def intersection_wrt_character(field, lattice1, lattice2, images1, images2):
     images_intersection1 = [];
     images_intersection2 = [];
     for row in intersection.basis_matrix().rows():
-        images_intersection1.append(sum([a*b for a,b in zip(images1, lattice1.coordinates(row))]))
-        images_intersection2.append(sum([a*b for a,b in zip(images2, lattice2.coordinates(row))]))
-    if K == QQ:
+        images_intersection1.append(prod([a**b for a,b in zip(images1, lattice1.coordinates(row))]))
+        images_intersection2.append(prod([a**b for a,b in zip(images2, lattice2.coordinates(row))]))
+    if field == QQ:
         exp_lattice = exponent_lattice_rationals([a/b for a,b in zip(images_intersection1, images_intersection2)]);
-    if K.is_finite():
-        exp_lattice = exponent_lattice_finite_field(K, [a/b for a,b in zip(images_intersection1, images_intersection2)]);
+    elif field.is_finite():
+        exp_lattice = exponent_lattice_finite_field(field, [a/b for a,b in zip(images_intersection1, images_intersection2)]);
     else:
         raise Exception("Not Yet Implemented")
     lattice = [];
@@ -618,7 +618,7 @@ def intersection_wrt_character(field, lattice1, lattice2, images1, images2):
         lattice.append(sum([a*b for a,b in zip(row, intersection.basis())]))
     images = [];
     for row in lattice:
-        images.append(sum([a*b for a,b in zip(images1, lattice1.coordinates(row))]))
+        images.append(prod([a**b for a,b in zip(images1, lattice1.coordinates(row))]))
     return IntegerLattice(lattice), images;
 
 

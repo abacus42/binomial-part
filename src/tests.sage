@@ -133,6 +133,12 @@ R.<x,y,z> = QQ[]
 I = R.ideal(x^2*y^4-2*x*y^2*z+2*z^2)
 assert binomial_part(I, False) == R.ideal(x^4*y^8+4*z^4), str(I)
 
+I = R.ideal(y^2 - 16*z^2, x^3*y - x^3*z - y + z)
+assert binomial_part(I, False) == R.ideal(x^3*y*z - y*z, x^3*z^2 - z^2, y^2 - 16*z^2), str(I)
+
+I = R.ideal(y^2-z^2, x^3*y - x^3*z - y + z)
+assert binomial_part(I, False) == R.ideal(y^2-z^2), str(I)
+
 #I = R.ideal(x^2+5, y^3-2)
 #assert binomial_part(I, False) == I, str(I)
 
