@@ -1,6 +1,11 @@
 # Binomial Part
 
-This is a [SageMath](https://www.sagemath.org) package for computing the binomial part of a polynomial ideal.
+This is a [SageMath](https://www.sagemath.org) package for computing the binomial part of a polynomial ideal. 
+The Algorithms are described in the paper: 
+
+*Martin Kreuzer and Florian Walsh, Computing the Binomial Part of a 
+Polynomial Ideal, Preprint 2023, available at [arXiv:2307.09394](https://arxiv.org/abs/2307.09394)*
+
 
 ## Installation
 
