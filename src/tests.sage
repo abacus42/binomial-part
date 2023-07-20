@@ -118,7 +118,16 @@ assert binomial_part(I) == R.ideal(x^3 - y*z^2, x*y^2 - z^3, y^3 - x^2*z);
 # R.<x,y,z> = GF(31)[];
 # binomial_part(R.ideal(x^13-1, y^14-1, z^15-1));
 
-print("########### (full) binomial_part ############");
+R.<x,y,z> = QQ[]
+I = R.ideal(x^8+x^7-x^5-x^4-x^3+x+1, y^8+y^7-y^5-y^4-y^3+y+1, x*z-y)
+Bin = R.ideal(x^14*y^16 - z, x^13*y^17 - z^2, x^12*y^18 - z^3, x^11*y^19 - z^4, x^10*y^20 - z^5, x^9*y^21 - z^6,
+x^8*y^22 - z^7, x^7*y^23 - z^8, x^6*y^24 - z^9, x^5*y^25 - z^10, x^4*y^26 - z^11, x^3*y^27 - z^12, x^2*y^28 - z^13,
+x*y^29 - z^14, y^30 - 1, x^15 - y^15, y^14*z - x^14, y^13*z^2 - x^13, y^12*z^3 - x^12, y^11*z^4 - x^11, y^10*z^5 - x^10,
+y^9*z^6 - x^9, y^8*z^7 - x^8, y^7*z^8 - x^7, y^6*z^9 - x^6, y^5*z^10 - x^5, y^4*z^11 - x^4, y^3*z^12 - x^3,
+y^2*z^13 - x^2, y*z^14 - x, z^15 - 1, x*z - y)
+assert binomial_part(I) == Bin, str(I)
+
+print("########### (full) binomial_part ############")
 R.<x,y> = QQ[]
 I = R.ideal(x^2+3*y^2)
 assert binomial_part(I, False) == I, str(I)
