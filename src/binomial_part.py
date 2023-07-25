@@ -94,6 +94,10 @@ def binomial_part(I, unitary=True):
         raise Exception("Not Yet Implemented: The coefficient ring needs to be QQ or a finite field")
     if I.is_one() or I.is_zero():
         return I
+    # sage handles univariate polynomial rings differently
+    if R.ngens() == 1:
+        R = PolynomialRing(R.base_ring(), R.variable_name(), 1)
+        I = R.ideal([R(str(f)) for f in I.gens()])
     X = set(R.gens())
     decomposition = cellular_decomposition(I)
     exps = [el.exponents for el in decomposition]
