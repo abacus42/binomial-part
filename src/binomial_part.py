@@ -158,6 +158,50 @@ def binomial_part(I, unitary=True):
     return R.ideal(result.interreduced_basis());
 
 
+def binomial_part_radical(I, unitary=True):
+    ''' Computes the binomial part of a radical ideal 'I' '''
+    R = I.ring()
+    if not R.base_ring().is_field():
+        raise Exception("Not Yet Implemented: The coefficient ring needs to be a field")
+    if not (R.base_ring() == QQ or R.base_ring().is_finite()):
+        raise Exception("Not Yet Implemented: The coefficient ring needs to be QQ or a finite field")
+    if I.is_one() or I.is_zero():
+        return I
+    # sage handles univariate polynomial rings differently
+    if R.ngens() == 1:
+        R = PolynomialRing(R.base_ring(), R.variable_name(), 1)
+        I = R.ideal([R(str(f)) for f in I.gens()])
+    X = set(R.gens())
+    ass_primes = I.associated_primes()
+    Y_collection = []
+    for prime in ass_primes:
+        Y = []
+        for indet in X:
+            if not indet in prime:
+                Y.append(indet)
+        Y_collection.append(frozenset(Y))
+    handled_Ys = []
+    result = R.ideal(0)
+    for subset in Subsets(Y_collection):
+        if subset.is_empty():
+            Y = X
+        else:
+            Y = intersection_sets(subset)
+        if not Y in handled_Ys:
+            handled_Ys.append(Y)
+            J_Y = R.ideal(1)
+            M_Y = R.ideal(1)
+            for i in range(len(ass_primes)):
+                if Y.issubset(Y_collection[i]):
+                    J_Y = J_Y.intersection(ass_primes[i])
+                else:
+                    M_Y = M_Y.intersection(R.ideal(list(X.difference(Y_collection[i]))))
+            J_Y = J_Y.elimination_ideal(list(X.difference(Y)))
+            sat = binomial_part_saturated(J_Y, unitary);
+            if not sat.is_zero():
+                result += M_Y.intersection(sat);
+    return R.ideal(result.interreduced_basis());
+
 
 def binomials_in_T(I, terms, unitary=True):
     """
