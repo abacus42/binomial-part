@@ -167,12 +167,19 @@ def extend_ring(R, indet_name):
 
 def localize(I, elements):
     R = I.ring()
+    non_invertible = elements
+    # for element in elements:
+    #     if not (I+R.ideal(element)).is_one():
+    #         non_invertible.append(element)
+    if len(non_invertible) == 0:
+        return R, I, elements
     R_localized = extend_ring(R, "inv")
     inv = R_localized.gens()[-1]
     I_localized = I.change_ring(R_localized)
-    elements_localized = [R_localized(el) for el in elements]
-    I_localized += R_localized.ideal(prod(elements_localized+[inv])-1)
-    return I_localized
+    non_invertible_localized = [R_localized(el) for el in non_invertible]
+    I_localized += R_localized.ideal(prod(non_invertible_localized+[inv])-1)
+    elements_localized = [R_localized(f) for f in elements]
+    return R_localized, I_localized, elements_localized
 
 
 def process_factorizations(elements :list):

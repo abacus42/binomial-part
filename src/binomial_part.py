@@ -230,12 +230,11 @@ def st_binomials(s,t, I, cellular : list, unitary = True):
             return [];
     if I.is_zero():
         return [];
-    I_localized = localize(I, cellular)
-    R_localized = I_localized.ring()
+    R_localized, I_localized, cellular_localized = localize(I, cellular)
     syz = syzygies_mod(I_localized, [R_localized(s),R_localized(t)]);
     import sage.libs.singular.function_factory;
     elim = sage.libs.singular.function_factory.ff.elim__lib.elim;
-    nilpotent = [x for x in R_localized.gens()[:-1] if x not in cellular];
+    nilpotent = [x for x in R_localized.gens()[:-1] if x not in cellular_localized];
     M = elim(Sequence(syz), prod(nilpotent));
     J = I_localized.quotient(R_localized.ideal(R_localized(t))).elimination_ideal(nilpotent);
     Q = PolynomialRing(I.base_ring(), [str(x) for x in cellular]+[str(R_localized.gens()[-1])]);
@@ -278,13 +277,11 @@ def binomial_part_saturated(I, unitary=True):
     #
     if I.is_zero() or I.is_one():
         return I
-    I_localized = localize(I, R.gens())
-    R_localized = I_localized.ring()
     if unitary:
-        lattice = exponent_lattice(I_localized, list(R_localized.gens()[:-1]))
+        lattice = exponent_lattice(I, list(R.gens()))
         return lattice_to_binomials(R, lattice, len(lattice.gens())*[1])
     else:
-        lattice, images = unit_lattice(I_localized, list(R_localized.gens()[:-1]))
+        lattice, images = unit_lattice(I, list(R.gens()))
         return lattice_to_binomials(R, lattice, images)
 
 
@@ -375,7 +372,7 @@ def reduction_to_zero_dim(I, elems : list):
     Q = PolynomialRing(coeff_ring, remaining_indets, len(remaining_indets));
     leading_coeffs = [Q(str(f)).lc() for f in GB];
     h = lcm([R(f) for f in leading_coeffs]);
-    Isat, sat_index = I.saturation(R.ideal(h));
+    Isat, sat_index = my_saturation(I, R.ideal(h));
     J = I+R.ideal(h**sat_index);
     J = J.saturation(R.ideal(prod(elems)))[0];
     if J.is_one() or contained_in(Isat, J):
@@ -454,11 +451,11 @@ def unit_lattice_zero_dim(I, elems :list):
     """
     assert I.dimension().is_zero(), "I is not zero-dimensional"
     assert I.quotient(I.ring().ideal(prod(elems))) == I, "I is not saturated wrt the product of 'elems'"
+    R, I, elems = localize(I, elems)
     # compute a basis of K(U)[X]/I as K(U) vector space
     basis = I.normal_basis();
     dim = len(basis);
     determinants = [multiplication_matrix_det(I, basis, elem) for elem in elems]
-    R = I.ring()
     R_extended = PolynomialRing(R.base_ring(), R.variable_names()+tuple(['det_sqrt%s'%k for k in range(1, len(elems)+1)]))
     I_extended = I.change_ring(R_extended);
     det_sqrt_indets = R_extended.gens()[R.ngens():(R.ngens()+len(elems))];

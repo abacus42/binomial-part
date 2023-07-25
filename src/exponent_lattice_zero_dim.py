@@ -347,11 +347,12 @@ def exponent_lattice_zero_dim(I, elems):
         The exponent lattice of 'elems' modulo I
     """
     assert I.dimension().is_zero(), "I is not zero-dimensional"
-    K = I.base_ring();
+    R, I, elems = localize(I, elems)
+    K = I.base_ring()
     if K.characteristic() == 0 or K.is_finite():
-        decompositions = separable_decomposition_perfect(I, elems);
+        decompositions = separable_decomposition_perfect(I, elems)
     else:
-        decompositions, I = separable_decomposition_non_perfect(I, elems);
+        decompositions, I = separable_decomposition_non_perfect(I, elems)
     # Compute (f*f_sep^-1) for each f in elements
     nil_images = [];
     sep_parts = [];
