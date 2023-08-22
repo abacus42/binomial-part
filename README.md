@@ -8,6 +8,10 @@ Polynomial Ideal, Preprint 2023, available at [arXiv:2307.09394](https://arxiv.o
 
 
 ## Installation
+This is not yet an official sage package. To use it start sage from the 'src' folder of a git checkout. Then run
+```
+sage: load('init.py')
+```
 
 ## Functions
 * ``binomial_part(ideal, unitary=True)``
