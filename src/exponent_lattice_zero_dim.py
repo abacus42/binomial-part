@@ -261,14 +261,12 @@ def unipotent_lattice_0(I, elems):
     log_coeffs = [];
     for log in logarithms:
         coeffs = [log.monomial_coefficient(mon) for mon in log_support];
-        if I.base_ring().base() == QQ:
-            log_coeffs.append(coeffs);
-        else:
-            # The coefficient ring might by a fraction field
+        denom_lcm = lcm([c.denominator() for c in coeffs]);
+        coeffs = [(denom_lcm*c).numerator() for c in coeffs];
+        log_coeffs.append(coeffs);
+        if I.base_ring().base() != QQ:
+            # The coefficient ring might by the fraction field of a polynomial ring
             # map the elements to the underlying ring
-            denom_lcm = lcm([c.denominator() for c in coeffs]);
-            coeffs = [(denom_lcm*c).numerator() for c in coeffs];
-            log_coeffs.append(coeffs);
             fraction_field_support = fraction_field_support.union(set([c.lm() for c in coeffs if not c.is_zero()]));
     if I.base_ring().base() == QQ:
         coeff_matrix = log_coeffs;
