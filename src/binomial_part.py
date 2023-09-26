@@ -151,7 +151,7 @@ def binomial_part(I, unitary=True):
                                 if not sat.is_zero():
                                     sum_st_binomials += [pair[0]*f for f in sat.gens()];
                             else:
-                                st_bins = st_binomials(s, t, K, list(Y), unitary);
+                                st_bins = st_binomial_part(s, t, K, list(Y), unitary);
                                 sum_st_binomials += [gcd(pair)*f for f in st_bins];
                 if len(sum_st_binomials) > 0:
                     result += M_Y.intersection(R.ideal(sum_st_binomials));
@@ -255,7 +255,7 @@ def terms_below(R, max_exps : list, cellular : list):
     return [R(t) for t in terms];
 
 
-def st_binomials(s,t, I, cellular : list, unitary = True):
+def st_binomial_part(s,t, I, cellular : list, unitary = True):
     """
     Computes the binomials of the form su-vt in I where u,v are terms in the indeterminates cellular
     Args:
@@ -327,13 +327,13 @@ def binomial_part_saturated(I, unitary=True):
         return I
     if unitary:
         lattice = exponent_lattice(I, list(R.gens()))
-        return lattice_to_binomials(R, lattice, len(lattice.gens())*[1])
+        return lattice_ideal(R, lattice, len(lattice.gens())*[1])
     else:
         lattice, images = unit_lattice(I, list(R.gens()))
-        return lattice_to_binomials(R, lattice, images)
+        return lattice_ideal(R, lattice, images)
 
 
-def lattice_to_binomials(ring, lattice, images):
+def lattice_ideal(ring, lattice, images):
     """
     Computes the binomial ideal in a polynomial ring given a lattice and a character
     Args:
