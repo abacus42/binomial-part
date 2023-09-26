@@ -39,6 +39,12 @@ n = 5;
 I = R.ideal(y-fibonacci(n)*x-fibonacci(n-1), x^2-x-1);
 assert exponent_lattice_number_field_max(I, [x,y]) == IntegerLattice([[5, -1]]);
 
+print("########### exponent_lattice ############");
+R.<x,y,z> = QQ[]
+I = R.ideal(x^2 + x + 1, y^2 + y + 1, z^2)
+lattice = IntegerLattice([(1, 0, 0, 0, 0, 0, 0), (0, 3, 0, 3, 0, 0, 0), (0, 0, 0, 6, 0, 0, 0)])
+assert exponent_lattice(I, [1, y + 1, -y*z - z + 1, x + 1, -x*y*z - x*z + 1, x*z + 1, z + 1]) == lattice, str(I)
+
 print("########### st_binomials ############");
 R.<x,y,z> = QQ[];
 I = R.ideal(x^4,  y^4, x^2*z^4 +x*y*z^2 +y^2,  x^3*z^2 -x^3 -y^3);
@@ -152,3 +158,4 @@ assert binomial_part(I, False) == R.ideal(y^2-z^2), str(I)
 #assert binomial_part(I, False) == I, str(I)
 
 print("########### ALL TESTS PASSED! ############");
+

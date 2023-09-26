@@ -30,59 +30,51 @@ from exponent_lattice_perfect_fields import *
 from exponent_lattice_zero_dim import *
 from monomial_part import *
 
-class CellularIdeal:
-    def __init__(self, ideal, cellular=set(), exponents=None):
-        self.ideal = ideal;
-        self.cellular = cellular.copy();
-        if exponents == None:
-            R = ideal.ring();
-            self.exponents = [0]*R.ngens();
-        else:
-            self.exponents = exponents;
-
-    def __str__(self):
-        return f"{self.ideal}, {self.cellular}, {self.exponents}"
-
-    def add_cellular(self, indet):
-        self.cellular.add(indet);
-
 
 def cellular_decomposition(I):
-    """ Computes a cellular decomposition of the ideal I """
+    """
+        Computes a cellular decomposition of the ideal I. It returns a list of lists. Each list
+        consists of three components:
+        - a cellular ideal
+        - a list indeterminates wrt to which the ideal is saturated
+        - a list l of integers such that x_i^l[i] is in the smallest power of x_i conained in the ideal.
+          If no power is in the ideal then l[i] is set to zero
+    """
     R = I.ring()
-    decompositions = [CellularIdeal(I)];
-    indets = I.ring().gens();
+    decomposition = [[I, set(), [0]*R.ngens()]]
+    indets = I.ring().gens()
     for i in range(len(indets)):
-        decompositions_new = [];
-        for el in decompositions:
-            sat = my_saturation(el.ideal, R.ideal(indets[i]));
+        new_decomposition = []
+        for el in decomposition:
+            sat = my_saturation(el[0], R.ideal(indets[i]))
             if sat[1] == 0:
-                el.add_cellular(indets[i]);
-                decompositions_new.append(el);
+                el[0] = sat[0]
+                el[1].add(indets[i])
+                new_decomposition.append(el)
             elif sat[0].is_one():
-                el.exponents[i] = sat[1];
-                decompositions_new.append(el);
+                el[2][i] = sat[1]
+                new_decomposition.append(el)
             else:
-                cellular = el.cellular.copy();
-                cellular = cellular.union({indets[i]});
-                decompositions_new.append(CellularIdeal(sat[0], cellular, el.exponents.copy()));
-                new_ideal = CellularIdeal(el.ideal + R.ideal(indets[i]**sat[1]), el.cellular.copy(), el.exponents.copy());
-                new_ideal.exponents[i] = sat[1];
-                decompositions_new.append(new_ideal);
-        decompositions = decompositions_new;
+                cellular = el[1].copy()
+                cellular.add(indets[i])
+                new_decomposition.append([sat[0], cellular, el[2].copy()])
+                new_component = [el[0] + R.ideal(indets[i]**sat[1]), el[1].copy(), el[2].copy()]
+                new_component[2][i] = sat[1]
+                new_decomposition.append(new_component)
+        decomposition = new_decomposition
     # remove redundant ideals
     contains_redundant = True;
     while contains_redundant:
-        for i in range(len(decompositions)):
-            without_i = [el.ideal for el in decompositions[:i]] + [el.ideal for el in decompositions[i+1:]];
+        for i in range(len(decomposition)):
+            without_i = [el[0] for el in decomposition[:i]] + [el[0] for el in decomposition[i+1:]];
             if len(without_i) == 0:
                 contains_redundant = False;
             else:
                 contains_redundant = (intersection_list(without_i) == I);
             if contains_redundant:
-                decompositions.remove(decompositions[i]);
+                decomposition.remove(decomposition[i]);
                 break;
-    return decompositions;
+    return decomposition;
 
 
 def binomial_part(I, unitary=True):
@@ -100,13 +92,13 @@ def binomial_part(I, unitary=True):
         I = R.ideal([R(str(f)) for f in I.gens()])
     X = set(R.gens())
     decomposition = cellular_decomposition(I)
-    exps = [el.exponents for el in decomposition]
+    exps = [el[2] for el in decomposition]
     max_exps = [];
     for i in range(len(X)):
         max_exps.append(max([exp[i] for exp in exps]));
     print(max_exps);
     result = R.ideal(0)
-    Y_collection = [frozenset(el.cellular) for el in decomposition]
+    Y_collection = [frozenset(el[1]) for el in decomposition]
     print(Y_collection);
     handled_Ys = []
     for subset in Subsets(Y_collection):
@@ -119,10 +111,10 @@ def binomial_part(I, unitary=True):
             J_Y = R.ideal(1)
             M_Y = R.ideal(1)
             for element in decomposition:
-                if Y.issubset(element.cellular):
-                    J_Y = J_Y.intersection(element.ideal)
+                if Y.issubset(element[1]):
+                    J_Y = J_Y.intersection(element[0])
                 else:
-                    M_Y = M_Y.intersection(monomial_part(element.ideal))
+                    M_Y = M_Y.intersection(monomial_part(element[0]))
             if X == Y:
                 #J_Y is saturated with respect to the product of all indeterminates
                 sat = binomial_part_saturated(J_Y, unitary);
