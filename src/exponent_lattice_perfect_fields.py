@@ -199,14 +199,15 @@ def integral_unit_lattice(K, elements):
     Returns:
         The lattice of all relations for which the corresponding product is a unit in the ring of integers of K
     """
-    primes = list();
+    primes = set();
     factorizations = list();
     for el in elements:
         fac = factor(K.ideal(el));
         factorizations.append(list(fac));
         for p in fac:
-            primes.append(p[0]);
+            primes.add(p[0]);
     system = list();
+    primes = list(primes)
     for el in factorizations:
         vector = [0] * len(primes);
         if len(el) > 0:
@@ -215,7 +216,7 @@ def integral_unit_lattice(K, elements):
                     if p == fact[0]:
                         vector[primes.index(p)] = fact[1];
         system.append(vector);
-        systemMatrix = matrix(system);
+    systemMatrix = matrix(system);
     return systemMatrix.kernel();
 
 
