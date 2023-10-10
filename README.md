@@ -62,6 +62,7 @@ sage: load('init.py')
   [x^3*z^6 - y^3]
   ```
 * ``cellular_decomposition(ideal)``
+
   This function computes the cellular decomposition the input ideal. It returns a list
   of lists. Each list consists of three components:
   + a cellular ideal
@@ -84,6 +85,60 @@ sage: load('init.py')
    Rational Field,
    {z, y},
    [1, 0, 0]]]
+  ```
+* ``exponent_lattice(ideal, elements)``
+
+    Returns the exponent lattice of the elements in the list elements modulo the input ideal.
+  ```
+  sage: R.<x,y> = QQ[]
+  sage: I = R.ideal(-5*x+y-3, x^2-x-1)
+  sage: exponent_lattice(I, [x,y])
+  Free module of degree 2 and rank 1 over Integer Ring
+  User basis matrix:
+  [ 5 -1]
+  ```
+* ``exponent_lattice_number_field(K, elements)``
+
+    Returns the exponent lattice of the elements in the list elements in the number field K.
+  ```
+  sage: K.<a> = NumberField(x^3-3*x-1)
+  Number Field in a with defining polynomial x^3 - 3*x - 1
+  sage: f1 = 1/2*a^2+a
+  sage: f2 = -736/9*a^2+1136/9*a+464/9
+  sage: f3 = 3*a+1
+  sage: exponent_lattice_number_field(K, [f1,f2,f3])
+  Free module of degree 3 and rank 1 over Integer Ring
+  User basis matrix:
+  [24 6 -8]
+  ```
+* ``unit_lattice(ideal, elements)``
+
+  This function computes the unit lattice and the associated character of the elements
+  in the list elements modulo the input ideal. It returns a tuple consisting of the
+  unit lattice and a list of elements [a_1,...,a_k] in the coefficient field such that the
+  associated character rho is given by rho(b_i) = a_i. Here b_1,...,b_k form a basis of the unit lattice.
+  ```
+  sage: R.<x,y> = QQ[]
+  sage: I = R.ideal(x^2*y^2-2*x*y+2)
+  sage: unit_lattice(I, [x,y])
+  (Free module of degree 2 and rank 1 over Integer Ring
+  Echelon basis matrix:
+  [4 4],
+  [-4])
+  ```
+* ``lattice_ideal(ring, lattice, images)``
+
+  Returns the lattice ideal defined by a lattice and an associated character. It takes
+  the following parameters.
+  + ring — a polynomial ring in n indeterminates
+  + lattice — a lattice in Z^n
+  + images — a list of elements of the coefficient field, defining an associated character
+  ```
+  sage: R.<x,y> = QQ[]
+  sage: L = IntegerLattice([[4,4]])
+  sage: lattice_ideal(R, L, [-4])
+  Ideal (x^4*y^4 + 4) of Multivariate Polynomial Ring in x, y over
+  Rational Field
   ```
 
 The package is developed by [Florian Walsh](mailto:florian.walsh@uni-passau.de)
