@@ -45,29 +45,29 @@ I = R.ideal(x^2 + x + 1, y^2 + y + 1, z^2)
 lattice = IntegerLattice([(1, 0, 0, 0, 0, 0, 0), (0, 3, 0, 3, 0, 0, 0), (0, 0, 0, 6, 0, 0, 0)])
 assert exponent_lattice(I, [1, y + 1, -y*z - z + 1, x + 1, -x*y*z - x*z + 1, x*z + 1, z + 1]) == lattice, str(I)
 
-print("########### st_binomials ############");
+print("########### st_binomial_part ############");
 R.<x,y,z> = QQ[];
 I = R.ideal(x^4,  y^4, x^2*z^4 +x*y*z^2 +y^2,  x^3*z^2 -x^3 -y^3);
-assert R.ideal(st_binomials(x^3, y^3, I, [z])) == R.ideal(x^3*z^6 - y^3), str(I)
+assert R.ideal(st_binomial_part(x^3, y^3, I, [z])) == R.ideal(x^3*z^6 - y^3), str(I)
 
 I = R.ideal (x^2*y + x*y^2 + y^3, x^5 + x*y^4 + y^5, x^3*z^4 - x*y^2*z^2 - y^3*z^2 + x*y^2, y^4*z^4 - x*y^3*z^2 - y^4*z^2 + x*y^3)
-assert R.ideal(st_binomials(y^5, y^5, I, [z])) == R.ideal(y^5*z^6-y^5), str(I)
+assert R.ideal(st_binomial_part(y^5, y^5, I, [z])) == R.ideal(y^5*z^6-y^5), str(I)
 
 I = R.ideal (x^2*y + x*y^2 + y^3, x^5 + x*y^4 + y^5, x^3*z^4 - x*y^2*z^2 - y^3*z^2 + x*y^2, y^4*z^4 - x*y^3*z^2 - y^4*z^2 + x*y^3);
-assert R.ideal(st_binomials(x^4, x*y^3, I, [z])) == R.ideal(x^4*z^6 - x*y^3), str(I)
+assert R.ideal(st_binomial_part(x^4, x*y^3, I, [z])) == R.ideal(x^4*z^6 - x*y^3), str(I)
 
 I = R.ideal(x-y)
-assert R.ideal(st_binomials(x, y, I, [z])) == R.ideal(x-y), str(I)
+assert R.ideal(st_binomial_part(x, y, I, [z])) == R.ideal(x-y), str(I)
 
 R.<x,y,z,w> = QQ[];
 I = R.ideal(x*z-w*y)
-assert R.ideal(st_binomials(x, y, I, [z,w])) == R.ideal(x*z-y*w), str(I)
+assert R.ideal(st_binomial_part(x, y, I, [z,w])) == R.ideal(x*z-y*w), str(I)
 
 I = R.ideal(x-y)
-assert R.ideal(st_binomials(x,y, I, [])) == R.ideal(x-y), str(I)
+assert R.ideal(st_binomial_part(x,y, I, [])) == R.ideal(x-y), str(I)
 
 I = R.ideal(x-y)
-assert R.ideal(st_binomials(1,1, I, [x,y])) == R.ideal(x-y), str(I)
+assert R.ideal(st_binomial_part(1,1, I, [x,y])) == R.ideal(x-y), str(I)
 
 print("########### unitary binomial_part ############");
 R.<x,y,z> = QQ[];
@@ -132,6 +132,8 @@ x*y^29 - z^14, y^30 - 1, x^15 - y^15, y^14*z - x^14, y^13*z^2 - x^13, y^12*z^3 -
 y^9*z^6 - x^9, y^8*z^7 - x^8, y^7*z^8 - x^7, y^6*z^9 - x^6, y^5*z^10 - x^5, y^4*z^11 - x^4, y^3*z^12 - x^3,
 y^2*z^13 - x^2, y*z^14 - x, z^15 - 1, x*z - y)
 assert binomial_part(I) == Bin, str(I)
+
+assert binomial_part(R.ideal(x-(y-1)*z)) == R.ideal(0), str(I)
 
 print("########### (full) binomial_part ############")
 R.<x,y> = QQ[]

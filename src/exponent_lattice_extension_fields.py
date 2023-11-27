@@ -166,6 +166,9 @@ def reduction_to_finite_extension(I, elems : list):
             vals.append(r-1);
         valuations.append([vals[i] - vals[-1] for i in range(len(vals)-1)]);
     ker = matrix(valuations).right_kernel();
+    # the linear system only has the trivial solution
+    if len(ker.gens()) == 0:
+        return ker
     fractions = [];
     for gen in ker.gens():
         num = S_closure_ring(1);

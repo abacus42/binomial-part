@@ -96,10 +96,8 @@ def binomial_part(I, unitary=True):
     max_exps = [];
     for i in range(len(X)):
         max_exps.append(max([exp[i] for exp in exps]));
-    print(max_exps);
     result = R.ideal(0)
     Y_collection = [frozenset(el[1]) for el in decomposition]
-    print(Y_collection);
     handled_Ys = []
     for subset in Subsets(Y_collection):
         if subset.is_empty():
