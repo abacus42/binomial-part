@@ -16,6 +16,7 @@ from sage.rings.integer import Integer
 from sage.arith.misc import factor
 from sage.arith.misc import gcd
 from sage.functions.other import floor
+import logging
 
 from help_functions import *
 from exponent_lattice_perfect_fields import *
@@ -345,6 +346,7 @@ def exponent_lattice_zero_dim(I, elems):
         The exponent lattice of 'elems' modulo I
     """
     assert I.dimension().is_zero(), "I is not zero-dimensional"
+    logging.info("Computing exponent lattice of "+ str(elems)+ " modulo 0-dim "+str(I))
     R, I, elems = localize(I, elems)
     K = I.base_ring()
     if K.characteristic() == 0 or K.is_finite():

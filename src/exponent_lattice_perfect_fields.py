@@ -18,6 +18,7 @@ from sage.modules.free_module_element import vector
 from sage.arith.functions import lcm
 from sage.rings.number_field.number_field import NumberField
 from sage.rings.number_field.unit_group import UnitGroup
+import logging
 
 from help_functions import *
 
@@ -229,6 +230,7 @@ def exponent_lattice_number_field(K, elements):
     Returns:
         The exponent lattice of 'elements' in K
     """
+    logging.info("Computing exponent lattice of "+ str(elems)+ " in number field "+str(K))
     submodule = integral_unit_lattice(K, elements);
     integer_units = [];
     if len(submodule.basis()) == 0:

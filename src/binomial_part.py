@@ -22,6 +22,7 @@ from sage.matrix.constructor import matrix
 from sage.rings.integer import Integer
 from sage.arith.misc import factor
 from sage.structure.sequence import Sequence
+import logging
 
 from help_functions import *
 from monomial_part import *
@@ -92,6 +93,7 @@ def binomial_part(I, unitary=True):
         I = R.ideal([R(str(f)) for f in I.gens()])
     X = set(R.gens())
     decomposition = cellular_decomposition(I)
+    logging.info("Cellular decomposition:\n"+str(decomposition))
     exps = [el[2] for el in decomposition]
     max_exps = [];
     for i in range(len(X)):
@@ -430,6 +432,7 @@ def exponent_lattice(I, elems : list):
     """
     assert I.quotient(I.ring().ideal(prod(elems))) == I, "I is not saturated wrt 'elems'"
     assert not I.is_one(), "I should be a proper ideal, but I = (1)"
+    logging.info("Computing exponent lattice of "+ str(elems)+ " modulo "+str(I))
     #
     if I.is_zero():
         return IntegerLattice([0]*len(elems));

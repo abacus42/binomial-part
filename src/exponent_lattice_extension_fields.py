@@ -133,6 +133,7 @@ def integral_closure(I):
 
 def reduction_to_finite_extension(I, elems : list):
     assert I.is_prime(), "I is not prime"
+    logging.info("Computing exponent lattice of "+ str(elems)+ " modulo maximal "+str(I))
     indets = I.base_ring().ring().variable_names();
     indets += I.ring().variable_names();
     R = PolynomialRing(I.base_ring().base_ring(), indets, len(indets));
