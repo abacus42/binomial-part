@@ -230,7 +230,7 @@ def exponent_lattice_number_field(K, elements):
     Returns:
         The exponent lattice of 'elements' in K
     """
-    logging.info("Computing exponent lattice of "+ str(elems)+ " in number field "+str(K))
+    logging.info("Computing exponent lattice of "+ str(elements)+ " in number field "+str(K))
     submodule = integral_unit_lattice(K, elements);
     integer_units = [];
     if len(submodule.basis()) == 0:
