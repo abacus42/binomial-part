@@ -234,7 +234,7 @@ def exponent_lattice_number_field(K, elements):
     submodule = integral_unit_lattice(K, elements);
     integer_units = [];
     if len(submodule.basis()) == 0:
-        return matrix([[0]*len(elements)]);
+        return IntegerLattice([0]*len(elements));
     for basis_vector in submodule.basis():
         term = 1;
         for i in range(len(elements)):
@@ -247,7 +247,7 @@ def exponent_lattice_number_field(K, elements):
     ker = systemMatrix.kernel();
     kernel_columns = ker.basis_matrix().columns();
     if len(kernel_columns) == 0:
-        return matrix([]);
+        return IntegerLattice([0]*len(elements));
     kernel_columns.pop();
     lattice_gens = [];
     for row in matrix(kernel_columns).transpose().rows():

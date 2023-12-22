@@ -147,6 +147,9 @@ def binomial_part(I, unitary=True):
                                 sum_st_binomials += [gcd(pair)*f for f in st_bins];
                 if len(sum_st_binomials) > 0:
                     result += M_Y.intersection(R.ideal(sum_st_binomials));
+    # sage crashes when applying 'interreduced_basis' to the zero ideal
+    if result.is_zero():
+        return result
     return R.ideal(result.interreduced_basis());
 
 
@@ -192,6 +195,9 @@ def binomial_part_radical(I, unitary=True):
             sat = binomial_part_saturated(J_Y, unitary);
             if not sat.is_zero():
                 result += M_Y.intersection(sat);
+    # sage crashes when applying 'interreduced_basis' to the zero ideal
+    if result.is_zero():
+        return result
     return R.ideal(result.interreduced_basis());
 
 
