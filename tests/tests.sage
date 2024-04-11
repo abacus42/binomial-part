@@ -1,14 +1,3 @@
-print("########### monomial_part ############");
-R.<x,y,z> = QQ[];
-I = R.ideal(x+y+z, y^2*z+y*z^2)
-assert monomial_part(I) == R.ideal(x*y*z), str(I)
-
-I = R.ideal(x*y^2*z+x*y*z, x*y^2*z+y^2*z, x^2*y^3*z+x^2*y+x*y*z,x^5*y^5*z)
-assert monomial_part(I) == R.ideal(y^2*z, x*y*z, x^2*y), str(I)
-
-I = R.ideal(x*y^3+z^2, y^5-z^3, x*z-y^2-x^3, x^4-x*z^2+y^3)
-assert monomial_part(I) == R.ideal(z^3, y*z^2, x^2*z^2, y^4*z, x*y^3*z, x^2*y^2*z, y^5, x*y^4, x^4*y*z, x^5*z, x^3*y^3, x^4*y^2, x^5*y, x^7), str(I)
-
 print("########### binomials_in_T ############");
 R.<x,y,z> = QQ[];
 assert ideal(binomials_in_T(R.ideal(x-3*y, 2*y-z), [x,y,z], False)) == R.ideal(x-3*y, 2*y-z)
@@ -21,6 +10,7 @@ K = FractionField(PolynomialRing(GF(3), 'u,t'));
 K.inject_variables();
 R.<x,y> = K[];
 assert pkth_root(t^3*x^18+u^9*y^9, 2, [0,0]) == (t*x^2+u*y, [0,1]);
+assert scale(x-u, [2,2], [1,0]) == x-u^3, scale(x-u, [2,2], [1,0])
 
 K = FractionField(PolynomialRing(GF(5), 't'));
 K.inject_variables();
