@@ -3,19 +3,22 @@ R.<x,y,z> = QQ[];
 assert ideal(binomials_in_T(R.ideal(x-3*y, 2*y-z), [x,y,z], False)) == R.ideal(x-3*y, 2*y-z)
 
 print("########### finite_field ############");
-R.<x,y> = GF(7)[];
-assert exponent_lattice_finite_field_max(R.ideal(x-y+1, y^2-3*y+1), [x,y]) == IntegerLattice([[2,-1], [4,6]]);
+R.<x,y> = GF(7)[]
+assert exponent_lattice_finite_field_max(R.ideal(x-y+1, y^2-3*y+1), [x,y]) == IntegerLattice([[2,-1], [4,6]])
 
-K = FractionField(PolynomialRing(GF(3), 'u,t'));
-K.inject_variables();
-R.<x,y> = K[];
-assert pkth_root(t^3*x^18+u^9*y^9, 2, [0,0]) == (t*x^2+u*y, [0,1]);
-assert scale(x-u, [2,2], [1,0]) == x-u^3, scale(x-u, [2,2], [1,0])
+K = FractionField(PolynomialRing(GF(3), 'u,t'))
+K.inject_variables()
+R.<x,y> = K[]
+assert pkth_root(t^3*x^18+u^9*y^9, 2, [0,0]) == (t*x^2+u*y, [0,1])
+assert scale(x-u, [2,2], [1,0]) == x-u^3, str(x-u)
+assert scale(u*x-t*y, [2,2],[2,2]) == u*x-t*y, str(u*x-t*y)
+assert scale(u^2*x-t*y, [3,1], [0,0]) == (u^54)*x + (-t^3)*y, str(u^2*x-t*y)
 
-K = FractionField(PolynomialRing(GF(5), 't'));
-K.inject_variables();
-R.<x> = K[];
-assert separable_part((x^5-t)*(x^5-t^5), [0]) == ((x-t)*(x-t^5), [1]);
+K = FractionField(PolynomialRing(GF(5), 't'))
+K.inject_variables()
+R.<x> = K[]
+assert separable_part((x^5-t)*(x^5-t^5), [0]) == ((x-t)*(x-t^5), [1])
+assert scale((t^2+t)*x+t, [1],[0]) == (t^10 + t^5)*x + t^5, str((t^2+t)*x+t)
 
 print("########### number_field ############");
 R.<x,y> = QQ[];

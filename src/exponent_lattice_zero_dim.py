@@ -91,7 +91,8 @@ def separable_part(f, levels):
         levels: A list of integers
 
     Returns:
-        The separable part of f and a list of levels
+        The separable part of f and a list of levels which encodes the
+        necessary field extension
     """
     h = gcd(f, f.derivative());
     g1 = (f/h).numerator();
@@ -126,11 +127,13 @@ def separable_part(f, levels):
 def scale(f, scale_levels, levels):
     """
     Args:
-        f: A univariate polynomial in GF(p)(t_1,...,t_s)[x] whose coefficients have denominator one
-        scale_levels: A list of integers
-        levels: A list of integers
+        f: A polynomial in GF(p)(t_1,...,t_s)[x_1,...,x_n] whose coefficients have denominator one
+        scale_levels: A list of integers representing the target field extension
+        levels: A list of integers representing the field extension in which f
+        currently lives
 
     Returns:
+        A polynomial corresponding to f in the "larger" field extension
     """
     R = f.parent();
     p = R.characteristic();
@@ -143,10 +146,11 @@ def scale(f, scale_levels, levels):
             if coeff_base.ngens() == 1:
                 exponents = coeff_mon.exponents();
             else:
-                exponents = coeff_mon.exponents()[0]; #in the multivariate case 'exponents' returns a list of tuples
+                #in the multivariate case 'exponents' returns a list of tuples
+                exponents = list(coeff_mon.exponents()[0]);
             for i in range(len(exponents)):
                 if exponents[i] != 0 and levels[i] < scale_levels[i]:
-                    exponents[i] = exponents[i]**(p**(scale_levels[i]-levels[i]));
+                    exponents[i] = exponents[i]*(p**(scale_levels[i]-levels[i]));
             if coeff_base.ngens() == 1:
                 exponents = exponents[0];
             else:
