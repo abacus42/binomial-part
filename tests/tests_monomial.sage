@@ -16,3 +16,4 @@ for test in tests:
     assert  result <= I, test[0]
     assert  mon_part == result, test[0]
 
+print("monomial part tests passed")

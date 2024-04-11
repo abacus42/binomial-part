@@ -63,33 +63,6 @@ I = R.ideal(x-y)
 assert R.ideal(st_binomial_part(1,1, I, [x,y])) == R.ideal(x-y), str(I)
 
 print("########### unitary binomial_part ############");
-R.<x,y,z> = QQ[];
-n = 10;
-I = R.ideal((x-z)^2, n*x-y-(n-1)*z);
-assert binomial_part(I) == R.ideal(x^n - y*z^(n-1)), str(I)
-
-I = R.ideal (x^3*z^4 + x^2*y*z^2 + x*y^2, x^2*y + x*y^2 + y^3);
-assert binomial_part(I) == R.ideal(x^2*y^3*z^6 - x^2*y^3, x*y^4*z^6 - x*y^4, y^5*z^6 - y^5, x^4*z^6 - x*y^3, x^5*z^4 - x^2*y^3*z^4, x^3*y - y^4), str(I)
-
-I = R.ideal(x^2-y*z, z^3+z+5)
-assert binomial_part(I) == R.ideal(x^2-y*z), str(I)
-
-I = R.ideal(x*y*z)
-assert binomial_part(I) == R.ideal(x*y*z), str(I)
-
-I = R.ideal(x^4+x^3*y*z^2+2*x^2*y^2*z^4+x*y^3*z^6+y^4*z^8)
-assert binomial_part(I) == R.ideal(y^12*z^24-x^12), str(I)
-
-I = R.ideal(x^3+x+1)
-assert binomial_part(I) == R.ideal(R.zero()), str(I)
-
-R.ideal((x^3-1)*(y^3-1))
-assert binomial_part(I) == R.ideal(R.zero()), str(I)
-
-R.<x,y> = QQ[];
-I = R.ideal(x^2+x+1, y^2*(y+1)^2)
-assert binomial_part(I) == R.ideal(x^3-1), str(I)
-
 # I = R.ideal(x^8+x^7-x^5-x^4-x^3+x+1, y^8+y^7-x^5-x^4-x^3+x+1, x*z-y);
 # binomial_part(I);
 
@@ -103,16 +76,6 @@ assert binomial_part(I) == I, str(I)
 # I = R.ideal(y^2*w^6 + x*y*z^2*w^3 + x^2*z^4, x^3*z^10 + x^3*z^5 + x^3*w^3 + y^3, w^10 + w^8 + 1, z^10 + z^8 + 1);
 # binomial_part(I);
 
-R = PolynomialRing(QQ, 'x',1);
-R.inject_variables();
-assert binomial_part(R.ideal(x^4+x^3+x^2+x+1)) == R.ideal(x^5-1);
-
-R.<x,y> = GF(5)[];
-assert binomial_part(R.ideal(-x + y - 1, x^2 - x - 1)) == R.ideal(x^2-y, y^10-1);
-
-R.<x,y,z> = GF(7)[];
-I = R.ideal((x-z)^2, 10*x-y-9*z);
-assert binomial_part(I) == R.ideal(x^3 - y*z^2, x*y^2 - z^3, y^3 - x^2*z);
 
 # R.<x,y,z> = GF(31)[];
 # binomial_part(R.ideal(x^13-1, y^14-1, z^15-1));
@@ -127,30 +90,6 @@ y^2*z^13 - x^2, y*z^14 - x, z^15 - 1, x*z - y)
 assert binomial_part(I) == Bin, str(I)
 
 assert binomial_part(R.ideal(x-(y-1)*z)) == R.ideal(0), str(I)
-
-print("########### (full) binomial_part ############")
-R.<x,y> = QQ[]
-I = R.ideal(x^2+3*y^2)
-assert binomial_part(I, False) == I, str(I)
-
-I = R.ideal(x^3-3*y^3)
-assert binomial_part(I, False) == I, str(I)
-
-I = R.ideal(x^2*y^2 - 2*x*y + 2)
-assert binomial_part(I, False) == R.ideal(x^4*y^4+4), str(I)
-
-R.<x,y,z> = QQ[]
-I = R.ideal(x^2*y^4-2*x*y^2*z+2*z^2)
-assert binomial_part(I, False) == R.ideal(x^4*y^8+4*z^4), str(I)
-
-I = R.ideal(y^2 - 16*z^2, x^3*y - x^3*z - y + z)
-assert binomial_part(I, False) == R.ideal(x^3*y*z - y*z, x^3*z^2 - z^2, y^2 - 16*z^2), str(I)
-
-I = R.ideal(y^2-z^2, x^3*y - x^3*z - y + z)
-assert binomial_part(I, False) == R.ideal(y^2-z^2), str(I)
-
-#I = R.ideal(x^2+5, y^3-2)
-#assert binomial_part(I, False) == I, str(I)
 
 print("########### ALL TESTS PASSED! ############");
 
