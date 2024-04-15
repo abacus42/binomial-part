@@ -168,6 +168,7 @@ def extend_ring(R, indet_name):
 def localize(I, elements):
     R = I.ring()
     non_invertible = elements
+    # non_invertible = []
     # for element in elements:
     #     if not (I+R.ideal(element)).is_one():
     #         non_invertible.append(element)
@@ -187,8 +188,8 @@ def process_factorizations(elements :list):
     all_factors = set();
     for element in elements:
         factors = list(element.factor());
-        if element.is_one():
-            # in this case el.factor() gives an empty list
+        if len(factors) == 0:
+            # if element is a unit, then factor() returns an empty list
             factors = [(1,0)];
         factorizations.append(factors);
         all_factors = all_factors.union(set([tup[0] for tup in factors]));

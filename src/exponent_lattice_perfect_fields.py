@@ -24,17 +24,17 @@ from help_functions import *
 
 def exponent_lattice_rationals(elements :list):
     """ Returns the exponent lattice of the list of rational numbers given as input """
-    factorizations, all_factors = process_factorizations(elements);
-    system = [];
+    factorizations, all_factors = process_factorizations(elements)
+    system = []
     for factor in all_factors:
-        row = [0]*len(elements);
+        row = [0]*len(elements)
         for i in range(len(elements)):
             for tup in factorizations[i]:
                 if tup[0] == factor:
-                    row[i] += tup[1];
-        system.append(row);
+                    row[i] += tup[1]
+        system.append(row)
     L = matrix(system).right_kernel()
-    signs = [1 if c.sign()==-1 else 0 for c in elements];
+    signs = [1 if c.sign()==-1 else 0 for c in elements]
     M = matrix(signs+[2]).right_kernel()
     projected_gens = [gen[:-1] for gen in M.gens()]
     M = IntegerLattice(projected_gens)
@@ -43,10 +43,10 @@ def exponent_lattice_rationals(elements :list):
 
 def get_group_ops(I):
     def op(f,g):
-        return (f*g).reduce(I);
+        return (f*g).reduce(I)
     def inv(f):
-        return f.inverse_mod(I);
-    return op, inv;
+        return f.inverse_mod(I)
+    return op, inv
 
 
 def primitive_element_finite(I, basis, group_order):
