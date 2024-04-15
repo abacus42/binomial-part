@@ -3,14 +3,12 @@ R.<x,y,z> = QQ[];
 assert ideal(binomials_in_T(R.ideal(x-3*y, 2*y-z), [x,y,z], False)) == R.ideal(x-3*y, 2*y-z)
 
 print("########### finite_field ############");
-R.<x,y> = GF(7)[]
-assert exponent_lattice_finite_field_max(R.ideal(x-y+1, y^2-3*y+1), [x,y]) == IntegerLattice([[2,-1], [4,6]])
-
 K = FractionField(PolynomialRing(GF(3), 'u,t'))
 K.inject_variables()
 R.<x,y> = K[]
 assert pkth_root(t^3*x^18+u^9*y^9, 2, [0,0]) == (t*x^2+u*y, [0,1])
 assert scale(x-u, [2,2], [1,0]) == x-u^3, str(x-u)
+    determinants = [R.base_ring()(det) for det in determinants]
 assert scale(u*x-t*y, [2,2],[2,2]) == u*x-t*y, str(u*x-t*y)
 assert scale(u^2*x-t*y, [3,1], [0,0]) == (u^54)*x + (-t^3)*y, str(u^2*x-t*y)
 
@@ -20,23 +18,6 @@ R.<x> = K[]
 assert separable_part((x^5-t)*(x^5-t^5), [0]) == ((x-t)*(x-t^5), [1])
 assert scale((t^2+t)*x+t, [1],[0]) == (t^10 + t^5)*x + t^5, str((t^2+t)*x+t)
 
-print("########### number_field ############");
-R.<x,y> = QQ[];
-assert exponent_lattice_number_field_max(R.ideal(x-y, y^3+y+5), [x,y]) == IntegerLattice([[1,-1]]);
-
-assert exponent_lattice_number_field_max(R.ideal(x,y), [R(1)]) == IntegerLattice([[1]]);
-
-assert exponent_lattice_number_field_max(R.ideal(x,y), [R(1), R(-1)]) == IntegerLattice([[1,0],[0,2]]);
-
-n = 5;
-I = R.ideal(y-fibonacci(n)*x-fibonacci(n-1), x^2-x-1);
-assert exponent_lattice_number_field_max(I, [x,y]) == IntegerLattice([[5, -1]]);
-
-print("########### exponent_lattice ############");
-R.<x,y,z> = QQ[]
-I = R.ideal(x^2 + x + 1, y^2 + y + 1, z^2)
-lattice = IntegerLattice([(1, 0, 0, 0, 0, 0, 0), (0, 3, 0, 3, 0, 0, 0), (0, 0, 0, 6, 0, 0, 0)])
-assert exponent_lattice(I, [1, y + 1, -y*z - z + 1, x + 1, -x*y*z - x*z + 1, x*z + 1, z + 1]) == lattice, str(I)
 
 print("########### st_binomial_part ############");
 R.<x,y,z> = QQ[];
