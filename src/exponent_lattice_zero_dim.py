@@ -181,18 +181,19 @@ def compute_decomposition(I, elems, sep_parts):
     """
     decompositions = [];
     for i in range(len(elems)):
-        g = sep_parts[i].derivative();
-        s = nil_index(I, sep_parts[i](elems[i]));
-        g_inverse = xgcd(sep_parts[i]**s, g)[2];
-        sep = elems[i];
-        nil = 0;
-        while sep_parts[i](sep) not in I:
-            nil += sep_parts[i](sep)*g_inverse(sep);
-            sep -= sep_parts[i](sep)*g_inverse(sep);
-            nil = nil.reduce(I);
-            sep = sep.reduce(I);
-        decompositions.append([sep, nil]);
-    return decompositions;
+        f = sep_parts[i]
+        g = f.derivative()
+        s = nil_index(I, f(elems[i]))
+        g_inverse = xgcd(f**s, g)[2]
+        sep = elems[i]
+        nil = 0
+        while f(sep) not in I:
+            nil += f(sep)*g_inverse(sep)
+            sep -= f(sep)*g_inverse(sep)
+            nil = nil.reduce(I)
+            sep = sep.reduce(I)
+        decompositions.append([sep, nil])
+    return decompositions
 
 
 def separable_decomposition_perfect(I, elems):
@@ -261,13 +262,13 @@ def unipotent_lattice_0(I, elems):
             log += R((1/j)*(f-1)**j);
             j += 1;
         logarithms.append(I.reduce(log));
+    logarithms = clear_denominators(logarithms)
     log_support = set([mon for f in logarithms for mon in f.monomials()]);
     fraction_field_support = set([]);
     log_coeffs = [];
     for log in logarithms:
         coeffs = [log.monomial_coefficient(mon) for mon in log_support];
-        denom_lcm = lcm([c.denominator() for c in coeffs]);
-        coeffs = [(denom_lcm*c).numerator() for c in coeffs];
+        coeffs = [c.numerator() for c in coeffs];
         log_coeffs.append(coeffs);
         if I.base_ring().base() != QQ:
             # The coefficient ring might by the fraction field of a polynomial ring
@@ -279,10 +280,42 @@ def unipotent_lattice_0(I, elems):
         coeff_matrix = [];
         for coeffs in log_coeffs:
             row = [c.monomial_coefficient(mon) for mon in fraction_field_support for c in coeffs];
-            denom_lcm = lcm([c.denominator() for c in row]);
-            row = [denom_lcm*c for c in row];
             coeff_matrix.append(row);
     return matrix(ZZ, coeff_matrix).left_kernel();
+
+
+def clear_denominators(polynomials : list):
+    if len(polynomials) == 0:
+        return polynomials
+    R = polynomials[0].parent()
+    assert R.characteristic() == 0, "characteristic of parent ring has to be zero"
+    # polynomials in QQ[x_1,...,x_n]
+    if R.base_ring().base() == QQ:
+        coeffs = set()
+        for f in polynomials:
+            coeffs = coeffs.union(set(f.coefficients()))
+        denominators = [c.denominator() for c in coeffs]
+        return[lcm(denominators)*f for f in polynomials]
+    else:
+        #polynomials in QQ(t_1,...,t_s)[x_1,...,x_n]
+        coeffs = set()
+        for f in polynomials:
+            coeffs = coeffs.union(set(f.coefficients()))
+        # determine numerators in QQ[t_1,...,t_s]
+        coeffs_polyring = [c.numerator() for c in coeffs]
+        # determine coefficients in QQ
+        coeffs_polyring_coeffs = set()
+        for c in coeffs_polyring:
+            coeffs_polyring_coeffs = coeffs_polyring_coeffs.union(set(c.coefficients()))
+        # determine denominators in ZZ
+        denominators = [c.denominator() for c in coeffs_polyring_coeffs]
+        # clear ZZ-denominators
+        coeffs = [lcm(denominators)*c for c in coeffs]
+        polynomials = [lcm(denominators)*f for f in polynomials]
+        # determine denominators in QQ[t_1,...,t_s]
+        denominators = [c.denominator() for c in coeffs]
+        # clear QQ[t_1,...,t_s]-denominators
+        return[lcm(denominators)*f for f in polynomials]
 
 
 def extended_discrete_log(f, order_f, gens, orders, I):
