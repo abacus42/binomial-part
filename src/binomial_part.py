@@ -163,6 +163,7 @@ def binomial_part_radical(I, unitary=True):
     if I.is_one() or I.is_zero():
         return I
     # sage handles univariate polynomial rings differently
+    # map them to a multivariate polynomial ring
     if R.ngens() == 1:
         R = PolynomialRing(R.base_ring(), R.variable_name(), 1)
         I = R.ideal([R(str(f)) for f in I.gens()])
@@ -277,17 +278,18 @@ def st_binomial_part(s,t, I, cellular : list, unitary = True):
     if I.is_zero():
         return [];
     R_localized, I_localized, cellular_localized = localize(I, cellular)
+    if R_localized.ngens() > I.ring().ngens():
+        cellular_localized.append(R_localized.gens()[-1])
     syz = syzygies_mod(I_localized, [R_localized(s),R_localized(t)]);
     import sage.libs.singular.function_factory;
     elim = sage.libs.singular.function_factory.ff.elim__lib.elim;
-    nilpotent = [x for x in R_localized.gens()[:-1] if x not in cellular_localized];
+    nilpotent = [x for x in R_localized.gens() if x not in cellular_localized];
     M = elim(Sequence(syz), prod(nilpotent));
     J = I_localized.quotient(R_localized.ideal(R_localized(t))).elimination_ideal(nilpotent);
-    Q = PolynomialRing(I.base_ring(), [str(x) for x in cellular]+[str(R_localized.gens()[-1])]);
+    Q = PolynomialRing(I.base_ring(), [str(x) for x in cellular_localized]);
     cellular_Q = [Q(f) for f in cellular];
     first_components = [Q(v[0]) for v in M];
     second_components = [Q(v[1]) for v in M];
-    inverses = [prod(cellular_Q[:i]+cellular_Q[i+1:])*Q.gens()[-1] for i in range(len(cellular))];
     J = J.change_ring(Q);
     if J.is_zero() or not Q.ideal(first_components).is_one():
         return []
@@ -398,7 +400,8 @@ def reduction_to_zero_dim(I, elems : list):
     """
     R = I.ring();
     assert I.quotient(R.ideal(prod(elems))) == I,"I is not saturated wrt the indeterminates"
-    #
+    if I.dimension() == 0:
+        return [I];
     I = R.ideal(I.groebner_basis());
     indep_indices = singular(I).indepSet().sage();
     P = elim_ring(R, indep_indices);
@@ -503,32 +506,25 @@ def unit_lattice_zero_dim(I, elems :list):
     basis = I.normal_basis();
     dim = len(basis);
     determinants = [multiplication_matrix_det(I, basis, elem) for elem in elems]
-    R_extended = PolynomialRing(R.base_ring(), R.variable_names()+tuple(['det_sqrt%s'%k for k in range(1, len(elems)+1)]))
-    I_extended = I.change_ring(R_extended);
-    det_sqrt_indets = R_extended.gens()[R.ngens():(R.ngens()+len(elems))];
-    # extend field with the square roots of the determinants
-    for i in range(len(elems)):
-        red_det, exp = min_exp(determinants[i], dim);
-        I_extended += R_extended.ideal(det_sqrt_indets[i]**exp*red_det-1);
+    R, I, det_sqrts = extend_by_roots(I, determinants, dim)
+    elems = [R(f) for f in elems]
     # divide the elements by the square roots of the determinants
-    new_elems = [a*b for a,b in zip(elems, det_sqrt_indets)];
+    new_elems = [a*b for a,b in zip(elems, det_sqrts)];
     root = generator_nth_roots_of_unity(R.base_ring().base_ring(), dim)
     if root != 1:
-        lattice = exponent_lattice_zero_dim(I_extended, new_elems+[R_extended(root)]);
+        lattice = exponent_lattice_zero_dim(I, new_elems+[R(root)]);
         projected_gens = [gen[:-1] for gen in lattice.gens()]
         lattice = IntegerLattice(projected_gens)
     else:
-        lattice = exponent_lattice_zero_dim(I_extended, new_elems);
+        lattice = exponent_lattice_zero_dim(I, new_elems);
     coeff_ring = R.base_ring()
     if coeff_ring.base_ring() != coeff_ring:
         # map determinants from K(U) to K[U]
         field_elems = []
-        field_elems_coeffs = []
         for det in determinants:
             num_coeff = det.numerator().lc()
             denom_coeff = det.denominator().lc()
             field_elems.append(coeff_ring((det.numerator()/num_coeff)/(det.denominator()/denom_coeff)))
-            field_elems_coeffs.append(num_coeff/denom_coeff)
         lattice = lattice.intersection(exponent_lattice_polynomials(field_elems))
     images = [];
     for gen in lattice.gens():
@@ -540,6 +536,45 @@ def unit_lattice_zero_dim(I, elems :list):
                 power_prod *= elems[i]**gen[i]
         images.append(R.base_ring().base_ring()(power_prod.reduce(I)))
     return lattice, images;
+
+
+def extend_by_roots(I, determinants, d):
+    R = I.ring()
+    # extend field with the square roots of the determinants
+    roots = []
+    added = []
+    for i in range(len(determinants)):
+        red_det, exp = min_exp(determinants[i], d)
+        if not red_det in added:
+            new_name = tuple(['det_sqrt'+str(i)])
+            R = PolynomialRing(R.base_ring(), R.variable_names()+new_name)
+            new_indet = R.gens()[-1]
+            I = I.change_ring(R)
+            I += R.ideal(new_indet**exp*red_det-1)
+            roots.append(new_indet)
+        else:
+            roots.append(roots[added.index(red_det)])
+        added.append(red_det)
+    # print(determinants)
+    # if len(determinants) > 1:
+    #     root = generator_nth_roots_of_unity(R.base_ring().base_ring(), d)
+    #     print(root)
+    #     if R.base_ring() == QQ:
+    #         lattice = exponent_lattice_rationals(determinants)
+    #     elif R.base_ring().is_finite():
+    #         lattice = exponent_lattice_finite_field(determinants)
+    #     else:
+    #         lattice = exponent_lattice_polynomials(determinants)
+    #     for gen in lattice.gens():
+    #         term1 = 1
+    #         term2 = 1
+    #         for i in range(len(gen)):
+    #             if gen[i] < 0:
+    #                 term2 *= (det_sqrt_indets[i])**(-2*gen[i])
+    #             else:
+    #                 term1 *= (det_sqrt_indets[i])**(2*gen[i])
+    #         I_extended += R_extended.ideal(term1-term2)
+    return R, I, roots
 
 
 def generator_nth_roots_of_unity(field, n):

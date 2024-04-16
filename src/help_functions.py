@@ -13,6 +13,8 @@ from sage.misc.misc_c import prod
 from sage.matrix.constructor import matrix
 from sage.arith.misc import factor
 from sage.arith.misc import xgcd
+from sage.arith.misc import gcd
+from sage.functions.other import floor
 
 from help_functions import *
 
@@ -167,11 +169,10 @@ def extend_ring(R, indet_name):
 
 def localize(I, elements):
     R = I.ring()
-    non_invertible = elements
-    # non_invertible = []
-    # for element in elements:
-    #     if not (I+R.ideal(element)).is_one():
-    #         non_invertible.append(element)
+    non_invertible = []
+    for element in elements:
+        if not (I+R.ideal(element)).is_one():
+            non_invertible.append(element)
     if len(non_invertible) == 0:
         return R, I, elements
     R_localized = extend_ring(R, "inv")
