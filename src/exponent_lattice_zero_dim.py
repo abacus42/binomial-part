@@ -418,7 +418,7 @@ def exponent_lattice_zero_dim(I, elems):
         elif K.base().is_finite():
             exp_lattice = exponent_lattice_finite_field_max(max_ideal, sep_parts)
         else:
-            exp_lattice = reduction_to_finite_extension(max_ideal, sep_parts);
+            exp_lattice = exponent_lattice_extension_field(max_ideal, sep_parts);
         # if the lattice is zero we can skip the remaining maximal ideals
         if len(exp_lattice.basis()) == 0:
             return exp_lattice

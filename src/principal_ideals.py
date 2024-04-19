@@ -1,5 +1,7 @@
 from sage.rings.finite_rings.hom_finite_field import FiniteFieldHomomorphism_generic
+from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
 from sage.rings.rational_field import QQ
+from sage.arith.misc import gcd
 import bisect
 
 def binomial_part_univar_rational(f):

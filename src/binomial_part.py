@@ -545,6 +545,8 @@ def extend_by_roots(I, determinants, d):
     added = []
     for i in range(len(determinants)):
         red_det, exp = min_exp(determinants[i], d)
+        # if exp == 1:
+        #     roots.append(red_det**-1)
         if not red_det in added:
             new_name = tuple(['det_sqrt'+str(i)])
             R = PolynomialRing(R.base_ring(), R.variable_names()+new_name)
