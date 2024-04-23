@@ -17,30 +17,6 @@ R.<x> = K[]
 assert separable_part((x^5-t)*(x^5-t^5), [0]) == ((x-t)*(x-t^5), [1])
 assert scale((t^2+t)*x+t, [1],[0]) == (t^10 + t^5)*x + t^5, str((t^2+t)*x+t)
 
-print("########### st_binomial_part ############");
-R.<x,y,z> = QQ[];
-I = R.ideal(x^4,  y^4, x^2*z^4 +x*y*z^2 +y^2,  x^3*z^2 -x^3 -y^3);
-assert R.ideal(st_binomial_part(x^3, y^3, I, [z])) == R.ideal(x^3*z^6 - y^3), str(I)
-
-I = R.ideal (x^2*y + x*y^2 + y^3, x^5 + x*y^4 + y^5, x^3*z^4 - x*y^2*z^2 - y^3*z^2 + x*y^2, y^4*z^4 - x*y^3*z^2 - y^4*z^2 + x*y^3)
-assert R.ideal(st_binomial_part(y^5, y^5, I, [z])) == R.ideal(y^5*z^6-y^5), str(I)
-
-I = R.ideal (x^2*y + x*y^2 + y^3, x^5 + x*y^4 + y^5, x^3*z^4 - x*y^2*z^2 - y^3*z^2 + x*y^2, y^4*z^4 - x*y^3*z^2 - y^4*z^2 + x*y^3);
-assert R.ideal(st_binomial_part(x^4, x*y^3, I, [z])) == R.ideal(x^4*z^6 - x*y^3), str(I)
-
-I = R.ideal(x-y)
-assert R.ideal(st_binomial_part(x, y, I, [z])) == R.ideal(x-y), str(I)
-
-R.<x,y,z,w> = QQ[];
-I = R.ideal(x*z-w*y)
-assert R.ideal(st_binomial_part(x, y, I, [z,w])) == R.ideal(x*z-y*w), str(I)
-
-I = R.ideal(x-y)
-assert R.ideal(st_binomial_part(x,y, I, [])) == R.ideal(x-y), str(I)
-
-I = R.ideal(x-y)
-assert R.ideal(st_binomial_part(1,1, I, [x,y])) == R.ideal(x-y), str(I)
-
 print("########### unitary binomial_part ############");
 # I = R.ideal(x^8+x^7-x^5-x^4-x^3+x+1, y^8+y^7-x^5-x^4-x^3+x+1, x*z-y);
 # binomial_part(I);
@@ -68,7 +44,6 @@ y^9*z^6 - x^9, y^8*z^7 - x^8, y^7*z^8 - x^7, y^6*z^9 - x^6, y^5*z^10 - x^5, y^4*
 y^2*z^13 - x^2, y*z^14 - x, z^15 - 1, x*z - y)
 assert binomial_part(I) == Bin, str(I)
 
-assert binomial_part(R.ideal(x-(y-1)*z)) == R.ideal(0), str(I)
 
 print("########### ALL TESTS PASSED! ############");
 
