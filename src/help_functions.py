@@ -16,15 +16,6 @@ from sage.arith.misc import xgcd
 from sage.arith.misc import gcd
 from sage.functions.other import floor
 
-from help_functions import *
-
-def contained_in(I,J):
-    ''' Checks whether I is contained in J '''
-    for f in I.gens():
-        if not f.reduce(J).is_zero():
-            return False;
-    return True;
-
 
 def syzygies_mod(I, elems : list):
     ''' Computes generators of the syzygy module of elems in P/I as a list of lists '''
@@ -155,10 +146,12 @@ def elim_ring(R, elim_list : list):
             remaining_indets.append(indets[i]);
     #elim_order = 'degrevlex('+str(len(elim_indets))+'),deglex('+str(len(remaining_indets))+')';
     #return PolynomialRing(R.base_ring(), elim_indets+remaining_indets, order=elim_order);
-    return PolynomialRing(R.base_ring(), elim_indets+remaining_indets);
+    return PolynomialRing(R.base_ring(), elim_indets+remaining_indets, order='lex');
 
 
 def extend_ring(R, indet_name):
+    if R.is_field():
+        return PolynomialRing(R, indet_name, 1)
     if indet_name in R.variable_names():
         i = 1
         while indet_name+str(i) in R.variable_names():

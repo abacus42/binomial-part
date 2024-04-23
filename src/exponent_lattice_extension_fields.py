@@ -12,6 +12,7 @@ from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
 from sage.interfaces.singular import singular
 from sage.matrix.constructor import matrix
 from sage.modules.free_module_integer import IntegerLattice
+from sage.misc.misc_c import prod
 
 from exponent_lattice_perfect_fields import *
 from help_functions import *
@@ -59,7 +60,7 @@ def compute_presentation(I, elems : list):
         elems: a list [f_1,...f_k] of polynomials in K(a_1,...,a_s)[x_1,...,x_n]
 
     Returns:
-        An ideal J in K[y_1,...,y_k+1] such that the subalgebra K[f_1t,...,f_kt]
+        An ideal J in K[y_1,...,y_k+1] such that the subalgebra K[f_1t,...,f_kt,t]
         is given by K[y_1,...,y_k+1]/J
     """
     R = I.ring()
@@ -69,12 +70,12 @@ def compute_presentation(I, elems : list):
     underlying_ring = fraction_field.ring()
     # K
     perfect_field = fraction_field.base_ring()
-    generators = I.gens().copy()
+    generators = list(I.gens()).copy()
     for i in range(len(generators)):
         coeffs = generators[i].coefficients()
         denom_lcm = lcm([c.denominator() for c in coeffs])
         generators[i] = denom_lcm* generators[i]
-    # Form K[y_1,...y_k+1,a_1,...,a_s,x_1,...x_n]
+    # form the ring K[y_1,...y_k+1,a_1,...,a_s,x_1,...x_n]
     var_names_y = tuple(['y%s'%k for k in range(1, len(elems)+2)])
     var_names = var_names_y + underlying_ring.variable_names()
     var_names += R.variable_names()
@@ -82,13 +83,20 @@ def compute_presentation(I, elems : list):
     J = R_elim.ideal([str(f) for f in generators])
     k = len(elems)
     indeterminates = R_elim.gens()
-    # Add the elements h_i*y_i-g_i*y_k+1 to J where f_i = g_i/h_i
+    # add the elements h_i*y_i-g_i*y_k+1 to J where f_i = g_i/h_i
     for i in range(k):
         coeffs = elems[i].coefficients()
         denom_lcm = lcm([c.denominator() for c in coeffs])
         cleared_denoms = denom_lcm * elems[i]
         J += R_elim.ideal(R_elim(str(denom_lcm))*indeterminates[i]-R_elim(str(cleared_denoms))*indeterminates[k])
+    R_elim = extend_ring(R_elim, "inv")
+    J = J.change_ring(R_elim)
+    inv = R_elim.gens()[-1]
+    indet_prod = prod(list(underlying_ring.gens()))
+    J += R_elim.ideal(R_elim(str(indet_prod))*inv-1)
+    indeterminates = R_elim.gens()
     Jelim = J.elimination_ideal(indeterminates[k+1:])
+    # form the ring K[y_1,...y_k+1]
     Ry = PolynomialRing(perfect_field, var_names_y)
     return Jelim.change_ring(Ry)
 
@@ -96,29 +104,13 @@ def compute_presentation(I, elems : list):
 def exponent_lattice_extension_field(I, elems : list):
     assert I.is_prime(), "I is not prime"
     logging.info("Computing exponent lattice of "+ str(elems)+ " modulo maximal "+str(I))
-    # indets = I.base_ring().ring().variable_names();
-    # indets += I.ring().variable_names();
-    # R = PolynomialRing(I.base_ring().base_ring(), indets, len(indets));
-    # elems = [R(str(f)) for f in elems];
-    # I = R.ideal([R(str(f)) for f in I.gens()]);
-    # n = R.ngens();
-    # # Introduce new indeterminates a_1, ..., a_s and t = a_s+1 where s = len(elems)
-    # Kt_ring = PolynomialRing(R.base_ring(), R.variable_names()+tuple(['a%s'%k for k in range(1, len(elems)+2)]));
-    # Kt_ideal = I.change_ring(Kt_ring);
-    # # Add the relations a_i = elems[i]*t and eliminate the original indeterminates x_1, ..., x_n
-    # t = Kt_ring.gens()[-1];
-    # Kt_elems = [Kt_ring(f) for f in elems];
-    # Kt_ideal += Kt_ring.ideal([Kt_ring.gens()[n+i]-Kt_elems[i]*t for i in range(len(elems))]);
-    # S_ideal = Kt_ideal.elimination_ideal(Kt_ring.gens()[:n]);
-    # Now S is given by K[y_1, ..., y_s, t]/S_ideal and we compute the integral closure of S
     S_ideal = compute_presentation(I, elems)
     coeff_ring = S_ideal.base_ring()
-    S_closure_ideal, module_gens = integral_closure(S_ideal);
+    S_closure_ideal, module_gens = integral_closure(S_ideal)
     S_closure_ring = S_closure_ideal.ring()
-    t = S_closure_ring.gens()[len(elems)];
-    # Kt_ideal = Kt_ideal.change_ring(S_closure_ring);
-    a = S_closure_ring.gens()[:len(elems)+1]; # a = (a_1, ..., a_s, t)
-    primes = set();
+    t = S_closure_ring.gens()[len(elems)]
+    a = S_closure_ring.gens()[:len(elems)+1] # a = (a_1, ..., a_s, t)
+    primes = set()
     for a_i in a:
         primes = primes.union(set((S_closure_ideal + S_closure_ring.ideal(a_i)).associated_primes()));
     valuations = [];
@@ -126,11 +118,11 @@ def exponent_lattice_extension_field(I, elems : list):
         vals = [];
         for f in a:
             r = 1;
-            while not contained_in((p**r+S_closure_ideal).quotient(S_closure_ring.ideal(f)+S_closure_ideal), p):
+            while not (p**r+S_closure_ideal).quotient(S_closure_ring.ideal(f)+S_closure_ideal) <= p:
                 r += 1;
-            vals.append(r-1);
-        valuations.append([vals[i] - vals[-1] for i in range(len(vals)-1)]);
-    ker = matrix(valuations).right_kernel();
+            vals.append(r-1)
+        valuations.append([vals[i] - vals[-1] for i in range(len(vals)-1)])
+    ker = matrix(valuations).right_kernel()
     # the linear system only has the trivial solution
     if len(ker.gens()) == 0:
         return ker
@@ -140,33 +132,34 @@ def exponent_lattice_extension_field(I, elems : list):
         den = S_closure_ring(1)
         for i in range(len(gen)):
             if gen[i] < 0:
-                den *= S_closure_ring.gens()[i]**(-gen[i]);
+                den *= S_closure_ring.gens()[i]**(-gen[i])
             else:
-                num *= S_closure_ring.gens()[i]**gen[i];
-        diff = num.degree()-den.degree();
+                num *= S_closure_ring.gens()[i]**gen[i]
+        diff = num.degree()-den.degree()
         if diff > 0:
-            den *= t**diff;
+            den *= t**diff
         if diff < 0:
-            num *= t**(-diff);
-        fractions.append([num, den]);
+            num *= t**(-diff)
+        fractions.append([num, den])
     field_elems = [];
     for frac in fractions:
-        f = S_closure_ring(frac[0]*module_gens[0]);
-        repr_ideal = S_closure_ring.ideal([frac[1]*el for el in module_gens])+S_closure_ideal;
-        rep_coeffs = f.lift(repr_ideal);
-        rep_coeffs = [c for c in rep_coeffs[:len(module_gens)]];
-        field_elems.append(scalar_product(rep_coeffs, [1]+list(S_closure_ring.gens()[len(elems)+1:])));
-    elim_ring = PolynomialRing(coeff_ring, S_closure_ring.variable_names()+tuple(['f%s'%k for k in range(1, len(field_elems)+1)]));
-    field_ideal = S_closure_ideal.change_ring(elim_ring) + elim_ring.ideal([elim_ring(field_elems[-i])-elim_ring.gens()[-i] for i in range(1,len(field_elems)+1)]);
-    field_ideal = field_ideal.elimination_ideal(elim_ring.gens()[:-len(field_elems)]);
-    field_ring = PolynomialRing(coeff_ring, ['f%s'%k for k in range(1, len(field_elems)+1)], len(field_elems));
-    field_elems = [field_ring(f) for f in elim_ring.gens()[-len(field_elems):]];
+        f = S_closure_ring(frac[0]*module_gens[0])
+        repr_ideal = S_closure_ring.ideal([frac[1]*el for el in module_gens])+S_closure_ideal
+        rep_coeffs = f.lift(repr_ideal)
+        rep_coeffs = [c for c in rep_coeffs[:len(module_gens)]]
+        field_elems.append(scalar_product(rep_coeffs, [1]+list(S_closure_ring.gens()[len(elems)+1:])))
+    elim_ring = PolynomialRing(coeff_ring, S_closure_ring.variable_names()+tuple(['f%s'%k for k in range(1, len(field_elems)+1)]))
+    field_ideal = S_closure_ideal.change_ring(elim_ring)
+    field_ideal += elim_ring.ideal([elim_ring(field_elems[-i])-elim_ring.gens()[-i] for i in range(1,len(field_elems)+1)])
+    field_ideal = field_ideal.elimination_ideal(elim_ring.gens()[:-len(field_elems)])
+    field_ring = PolynomialRing(coeff_ring, ['f%s'%k for k in range(1, len(field_elems)+1)], len(field_elems))
+    field_elems = [field_ring(f) for f in elim_ring.gens()[-len(field_elems):]]
     if coeff_ring.characteristic() == 0:
-        finite_extension_lattice = exponent_lattice_number_field_max(field_ideal.change_ring(field_ring), field_elems);
+        finite_extension_lattice = exponent_lattice_number_field_max(field_ideal.change_ring(field_ring), field_elems)
     else:
-        finite_extension_lattice = exponent_lattice_finite_field_max(field_ideal.change_ring(field_ring), field_elems);
-    lattice_gens = [[0]*len(elems)];
+        finite_extension_lattice = exponent_lattice_finite_field_max(field_ideal.change_ring(field_ring), field_elems)
+    lattice_gens = [[0]*len(elems)]
     for gen in finite_extension_lattice.gens():
-        new_gen = sum([gen[i]*ker.gens()[i] for i in range(len(gen))]);
-        lattice_gens.append(new_gen);
-    return IntegerLattice(lattice_gens);
+        new_gen = sum([gen[i]*ker.gens()[i] for i in range(len(gen))])
+        lattice_gens.append(new_gen)
+    return IntegerLattice(lattice_gens)

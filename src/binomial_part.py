@@ -424,7 +424,7 @@ def reduction_to_zero_dim(I, elems : list):
     Isat, sat_index = my_saturation(I, R.ideal(h));
     J = I+R.ideal(h**sat_index);
     J = J.saturation(R.ideal(prod(elems)))[0];
-    if J.is_one() or contained_in(Isat, J):
+    if J.is_one() or Isat <= J:
         return [I.change_ring(Q)];
     else:
         return [I.change_ring(Q)]+reduction_to_zero_dim(J, elems);
@@ -501,22 +501,23 @@ def unit_lattice_zero_dim(I, elems :list):
     """
     assert I.dimension().is_zero(), "I is not zero-dimensional"
     assert I.quotient(I.ring().ideal(prod(elems))) == I, "I is not saturated wrt the product of 'elems'"
-    R, I, elems = localize(I, elems)
+    R, Iloc, elems = localize(I, elems)
     # compute a basis of K(U)[X]/I as K(U) vector space
-    basis = I.normal_basis();
+    basis = Iloc.normal_basis();
     dim = len(basis);
-    determinants = [multiplication_matrix_det(I, basis, elem) for elem in elems]
-    R, I, det_sqrts = extend_by_roots(I, determinants, dim)
+    determinants = [multiplication_matrix_det(Iloc, basis, elem) for elem in elems]
+    R, I, det_sqrts = extend_by_roots(Iloc, determinants, dim)
     elems = [R(f) for f in elems]
     # divide the elements by the square roots of the determinants
-    new_elems = [a*b for a,b in zip(elems, det_sqrts)];
+    new_elems = [a*b for a,b in zip(elems, det_sqrts)]
+    new_elems = [f.reduce(I) for f in new_elems]
     root = generator_nth_roots_of_unity(R.base_ring().base_ring(), dim)
     if root != 1:
         lattice = exponent_lattice_zero_dim(I, new_elems+[R(root)]);
         projected_gens = [gen[:-1] for gen in lattice.gens()]
         lattice = IntegerLattice(projected_gens)
     else:
-        lattice = exponent_lattice_zero_dim(I, new_elems);
+        lattice = exponent_lattice_zero_dim(I, new_elems)
     coeff_ring = R.base_ring()
     if coeff_ring.base_ring() != coeff_ring:
         # map determinants from K(U) to K[U]
@@ -531,51 +532,118 @@ def unit_lattice_zero_dim(I, elems :list):
         power_prod = 1
         for i in range(len(gen)):
             if gen[i] < 0:
-                power_prod *= elems[i].inverse_mod(I)**(-gen[i])
+                power_prod *= elems[i].inverse_mod(Iloc)**(-gen[i])
             else:
                 power_prod *= elems[i]**gen[i]
-        images.append(R.base_ring().base_ring()(power_prod.reduce(I)))
+        image = power_prod.reduce(Iloc)
+        image = image.lc()
+        if not R.base_ring().is_prime_field():
+            image = image.numerator().lc()
+        images.append(R.base_ring().base_ring()(image))
     return lattice, images;
 
 
+def factor_over_extension(I, f):
+    """
+    Args:
+        I: A maximal zero-dimensional ideal in a polynomial ring K[x_1,...x_n]
+        f: A univariate polynomial in K[x_1,...x_n]
+
+    Returns:
+        The irreducible factors of f viewed as a polynomial in K[x_1,...x_n][t]
+    """
+    # f is a univariate polynomial over K
+    if I.is_zero():
+        factors = factor(f)
+        # ignore multiplicities
+        factors = [g[0] for g in factors]
+        factors = [make_monic(g) for g in factors]
+        return factors
+    R = I.ring()
+    # form the ring K[x_1,...,x_n,t]
+    Rt = extend_ring(R, "t")
+    t = Rt.gens()[-1]
+    # define elimination order for t
+    elim_indets = Rt.ngens()*[1]
+    elim_indets[-1] = 0
+    Relim = elim_ring(Rt, elim_indets)
+    I = I.change_ring(Relim)
+    I += Relim.ideal(f(t))
+    primes = I.associated_primes()
+    factors = []
+    for p in primes:
+        for f in p.groebner_basis():
+            if f.lt().radical() == t:
+                factors.append(f)
+                break
+    factors = list(set(factors))
+    # form the ring K[x_1,...,x_n][t]
+    Runivar = PolynomialRing(R, str(t))
+    return [make_monic(Runivar(g)) for g in factors]
+
+def make_monic(f):
+    return f.lc()**-1*f
+
+def min_poly_inverse(I, f):
+    """
+    Args:
+        I: A maximal zero-dimensional ideal in polynomial ring K[x_1,...x_n]
+        f: A univariate polynomial in K[x_1,...x_n][t] representing the minimal
+            polynomial of some element a
+
+    Returns:
+        The irreducible factors of f viewed as a polynomial in K[x_1,...x_n][t]
+    """
+    R = I.ring()
+    x = f.parent().gen()
+    coeffs = f.coefficients()
+    coeffs.reverse()
+    exps = f.exponents()
+    min_poly = 0
+    for i in range(len(coeffs)-1):
+       min_poly += coeffs[i]*x**exps[i]
+    min_poly *= R(f.constant_coefficient()).inverse_mod(I)
+    min_poly += x**exps[-1]
+    return min_poly
+
+
+def adjoin_root(I, f):
+    R = I.ring()
+    factors = factor_over_extension(I, f)
+    degrees = [g.degree() for g in factors]
+    if 1 in degrees:
+        index = degrees.index(1)
+        linear_factor = factors[index]
+        return I, R(-linear_factor.constant_coefficient()).inverse_mod(I)
+    g = min_poly_inverse(I, factors[0])
+    Rext = extend_ring(R, "det_sqrt")
+    det_sqrt = Rext.gens()[-1]
+    if I.is_zero():
+        I = Rext.ideal(g(det_sqrt))
+    else:
+        I = I.change_ring(Rext)
+        I += Rext.ideal(g(det_sqrt))
+    return I, det_sqrt
+
 def extend_by_roots(I, determinants, d):
     R = I.ring()
+    K = I.base_ring()
+    x = R.gens()[0]
     # extend field with the square roots of the determinants
     roots = []
-    added = []
-    for i in range(len(determinants)):
-        red_det, exp = min_exp(determinants[i], d)
-        # if exp == 1:
-        #     roots.append(red_det**-1)
-        if not red_det in added:
-            new_name = tuple(['det_sqrt'+str(i)])
-            R = PolynomialRing(R.base_ring(), R.variable_names()+new_name)
-            new_indet = R.gens()[-1]
-            I = I.change_ring(R)
-            I += R.ideal(new_indet**exp*red_det-1)
-            roots.append(new_indet)
-        else:
-            roots.append(roots[added.index(red_det)])
-        added.append(red_det)
-    # print(determinants)
-    # if len(determinants) > 1:
-    #     root = generator_nth_roots_of_unity(R.base_ring().base_ring(), d)
-    #     print(root)
-    #     if R.base_ring() == QQ:
-    #         lattice = exponent_lattice_rationals(determinants)
-    #     elif R.base_ring().is_finite():
-    #         lattice = exponent_lattice_finite_field(determinants)
-    #     else:
-    #         lattice = exponent_lattice_polynomials(determinants)
-    #     for gen in lattice.gens():
-    #         term1 = 1
-    #         term2 = 1
-    #         for i in range(len(gen)):
-    #             if gen[i] < 0:
-    #                 term2 *= (det_sqrt_indets[i])**(-2*gen[i])
-    #             else:
-    #                 term1 *= (det_sqrt_indets[i])**(2*gen[i])
-    #         I_extended += R_extended.ideal(term1-term2)
+    field_ideal = K.ideal(0)
+    for det in determinants:
+        f = (x**d-det).univariate_polynomial()
+        field_ideal, root = adjoin_root(field_ideal, f)
+        roots.append(root)
+    if not field_ideal.is_zero():
+        field_ring = field_ideal.ring()
+        var_names = R.variable_names()
+        var_names += field_ring.variable_names()
+        R = PolynomialRing(K, var_names, len(var_names))
+        I = I.change_ring(R)
+        field_ideal = field_ideal.change_ring(R)
+        I += field_ideal
     return R, I, roots
 
 
