@@ -34,7 +34,7 @@ for test in tests_unit_lattice:
     coeffs = test[4]
     elements = [R(f) for f in test[2]]
     result = unit_lattice(I, elements)
-    assert result[0] == lattice, test[0]
-    assert result[1] == coeffs, test[0]
+    assert result.lattice == lattice, str(I)
+    assert result.images == coeffs, str(I)
 
 print("unit lattice tests passed")

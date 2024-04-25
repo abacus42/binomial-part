@@ -22,6 +22,7 @@ from sage.matrix.constructor import matrix
 from sage.rings.integer import Integer
 from sage.arith.misc import factor
 from sage.structure.sequence import Sequence
+from sage.modules.free_module import FreeModule
 import logging
 
 from help_functions import *
@@ -30,6 +31,114 @@ from exponent_lattice_extension_fields import *
 from exponent_lattice_perfect_fields import *
 from exponent_lattice_zero_dim import *
 from monomial_part import *
+
+class UnitLattice:
+    def __init__(self, field, generators, images):
+        """
+        Args:
+            field : A field K
+            generators: A list of lists of integers representing the generators of a lattice L
+            images: A list of elements in K* representing the images of the generators of L
+                under the associated character L -> K*
+        """
+        generators, images = self.__remove_dependent(generators, images)
+        self.lattice = IntegerLattice(generators)
+        self.field = field
+        self.images = images
+        self.__update_images(generators)
+
+    def gens(self):
+        return self.lattice.gens()
+
+    def character(self, vector):
+        ''' returns the image of a vector in L under the associated character '''
+        if vector.is_zero():
+            return self.field.one()
+        coords = self.lattice.coordinates(vector)
+        return prod([a**b for a,b in zip(self.images, coords)])
+
+    def __update_images(self, generators):
+        lattice_non_reduced = IntegerLattice(generators, lll_reduce=False)
+        old_images = self.images
+        self.images = []
+        for gen in self.lattice.gens():
+            coordinates = lattice_non_reduced.coordinate_vector(gen)
+            self.images.append(prod([a**b for a,b in zip(old_images, coordinates)]))
+
+    def __remove_dependent(self, generators, images):
+        M = FreeModule(ZZ, len(generators[0]))
+        generators = [vector(ZZ, l) for l in generators]
+        generators = [v for v in generators if not v.is_zero()]
+        while M.are_linearly_dependent(generators):
+            generators = generators[:-1]
+            images = images[:-1]
+        return generators, images
+
+    def elim_last(self):
+        gens = self.lattice.gens()
+        gens = [v[:-1] for v in gens]
+        gens, self.images = self.__remove_dependent(gens, self.images)
+        self.lattice = IntegerLattice(gens)
+        self.__update_images(gens)
+
+    def intersection(self, other_lattice):
+        """ Returns the intersection with respect to the lattices and the associated character """
+        assert self.field == other_lattice.field, "fields do not coincide"
+        intersection = self.lattice.intersection(other_lattice.lattice);
+        images_intersection1 = [];
+        images_intersection2 = [];
+        for row in intersection.basis_matrix().rows():
+            images_intersection1.append(self.character(row))
+            images_intersection2.append(other_lattice.character(row))
+        fractions = [a/b for a,b in zip(images_intersection1, images_intersection2)]
+        if self.field == QQ:
+            exp_lattice = exponent_lattice_rationals(fractions)
+        elif self.field.is_finite():
+            exp_lattice = exponent_lattice_finite_field(self.field, fractions)
+        else:
+            raise Exception("Not Yet Implemented")
+        generators = []
+        for row in exp_lattice.basis_matrix().rows():
+            generators.append(sum([a*b for a,b in zip(row, intersection.basis())]))
+        images = []
+        for gen in generators:
+            images.append(self.character(gen))
+        return UnitLattice(self.field, generators, images)
+
+
+def intersection_wrt_character(field, lattice1, lattice2, images1, images2):
+    """
+    Computes the intersection of two lattices with respect to given characters
+    Args:
+        field : A field K
+        lattice1: An integer lattice
+        lattice2: An integer lattice
+        images1: The images of the basis elements of lattice1 under the character lattice1 -> K*
+        images2: The images of the basis elements of lattice2 under the character lattice2 -> K*
+
+    Returns:
+        The intersection with respect to the lattices and the associated character given
+        by the images of the basis elements
+    """
+    intersection = lattice1.intersection(lattice2);
+    images_intersection1 = [];
+    images_intersection2 = [];
+    for row in intersection.basis_matrix().rows():
+        images_intersection1.append(prod([a**b for a,b in zip(images1, lattice1.coordinates(row))]))
+        images_intersection2.append(prod([a**b for a,b in zip(images2, lattice2.coordinates(row))]))
+    if field == QQ:
+        exp_lattice = exponent_lattice_rationals([a/b for a,b in zip(images_intersection1, images_intersection2)]);
+    elif field.is_finite():
+        exp_lattice = exponent_lattice_finite_field(field, [a/b for a,b in zip(images_intersection1, images_intersection2)]);
+    else:
+        raise Exception("Not Yet Implemented")
+    lattice = [];
+    for row in exp_lattice.basis_matrix().rows():
+        lattice.append(sum([a*b for a,b in zip(row, intersection.basis())]))
+    images = [];
+    for row in lattice:
+        images.append(prod([a**b for a,b in zip(images1, lattice1.coordinates(row))]))
+    return IntegerLattice(lattice), images;
 
 
 def cellular_decomposition(I):
@@ -269,14 +378,16 @@ def st_binomial_part(s,t, I, cellular : list, unitary = True):
     assert s not in I, "s is contained in I"
     assert t not in I, "t is contained in I"
     assert I.quotient(I.ring().ideal(prod(cellular))) == I, "I is not saturated w.r.t. to the indets in cellular"
+    assert I.base_ring().is_prime_field(), "base ring is not a prime field"
     #
+    field = I.base_ring()
     if len(cellular) == 0:
         if s-t in I:
-            return [s-t];
+            return [s-t]
         else:
-            return [];
+            return []
     if I.is_zero():
-        return [];
+        return []
     R_localized, I_localized, cellular_localized = localize(I, cellular)
     if R_localized.ngens() > I.ring().ngens():
         cellular_localized.append(R_localized.gens()[-1])
@@ -286,7 +397,7 @@ def st_binomial_part(s,t, I, cellular : list, unitary = True):
     nilpotent = [x for x in R_localized.gens() if x not in cellular_localized];
     M = elim(Sequence(syz), prod(nilpotent));
     J = I_localized.quotient(R_localized.ideal(R_localized(t))).elimination_ideal(nilpotent);
-    Q = PolynomialRing(I.base_ring(), [str(x) for x in cellular_localized]);
+    Q = PolynomialRing(field, [str(x) for x in cellular_localized]);
     cellular_Q = [Q(f) for f in cellular];
     first_components = [Q(v[0]) for v in M];
     second_components = [Q(v[1]) for v in M];
@@ -300,22 +411,23 @@ def st_binomial_part(s,t, I, cellular : list, unitary = True):
         return []
     if unitary:
         lattice = exponent_lattice(J, cellular_Q+[-h]);
-        images = [1]*len(lattice.gens())
+        lattice = UnitLattice(field, lattice.gens(), [field.one()]*len(lattice.gens()))
     else:
-        lattice, images = unit_lattice(J, cellular_Q+[-h])
-    last_components = [gen[-1] for gen in lattice.gens()];
+        lattice = unit_lattice(J, cellular_Q+[-h])
+    last_components = [gen[-1] for gen in lattice.gens()]
+    first_components = [gen[:-1] for gen in lattice.gens()]
     if gcd(last_components) != 1:
         return []
-    first_components = [gen[:-1] for gen in lattice.gens()];
+    lattice.elim_last()
     # the affine solution space is given by u_1+U
-    U = matrix(ZZ, [last_components]).right_kernel();
-    u_1 = ext_gcd(last_components);
-    exponents = (matrix(first_components).transpose())*(matrix(u_1).transpose());
+    U = matrix(ZZ, [last_components]).right_kernel()
+    u_1 = ext_gcd(last_components)
+    exponents = (matrix(first_components).transpose())*(matrix(u_1).transpose())
     exponents = exponents.columns()
     for gen in U.gens():
-        u = [a+b for a,b in zip(u_1, gen)];
-        exponents += ((matrix(first_components).transpose())*(matrix(u).transpose())).columns();
-    return lattice_to_st_binomials(I.ring(), exponents, images, s, t, cellular).gens()
+        u = [a+b for a,b in zip(u_1, gen)]
+        exponents += ((matrix(first_components).transpose())*(matrix(u).transpose())).columns()
+    return lattice_to_st_binomials(I.ring(), exponents, [lattice.character(e) for e in exponents], s, t, cellular).gens()
 
 
 def binomial_part_saturated(I, unitary=True):
@@ -329,8 +441,8 @@ def binomial_part_saturated(I, unitary=True):
         lattice = exponent_lattice(I, list(R.gens()))
         return lattice_ideal(R, lattice, len(lattice.gens())*[1])
     else:
-        lattice, images = unit_lattice(I, list(R.gens()))
-        return lattice_ideal(R, lattice, images)
+        lattice = unit_lattice(I, list(R.gens()))
+        return lattice_ideal(R, lattice.lattice, lattice.images)
 
 
 def lattice_ideal(ring, lattice, images):
@@ -473,20 +585,22 @@ def unit_lattice(I, elems):
     """
     assert I.quotient(I.ring().ideal(prod(elems))) == I, "I is not saturated wrt 'elems'"
     assert not I.is_one(), "I should be a proper ideal, but I = (1)"
+    assert I.base_ring().is_prime_field(), "base ring is not a prime field"
     #
+    field = I.base_ring()
     if I.is_zero():
-        return IntegerLattice([0]*len(elems)), [1];
+        return IntegerLattice(field, [[field.zero()]*len(elems)], [field.one()])
     if I.dimension().is_zero():
-        lattice, images = unit_lattice_zero_dim(I, elems);
+        lattice = unit_lattice_zero_dim(I, elems)
     else:
-        ideals = reduction_to_zero_dim(I, elems);
-        R = ideals[0].ring();
-        lattice, images = unit_lattice_zero_dim(ideals[0], [R(f) for f in elems]);
+        ideals = reduction_to_zero_dim(I, elems)
+        R = ideals[0].ring()
+        lattice = unit_lattice_zero_dim(ideals[0], [R(f) for f in elems])
         for J in ideals[1:]:
-            R = J.ring();
-            latticeJ, imagesJ = unit_lattice_zero_dim(J, [R(f) for f in elems]);
-            lattice, images = intersection_wrt_character(I.base_ring(), lattice, latticeJ, images, imagesJ);
-    return lattice, images;
+            R = J.ring()
+            latticeJ = unit_lattice_zero_dim(J, [R(f) for f in elems])
+            lattice = lattice.intersection(latticeJ)
+    return lattice
 
 
 def unit_lattice_zero_dim(I, elems :list):
@@ -503,22 +617,22 @@ def unit_lattice_zero_dim(I, elems :list):
     assert I.quotient(I.ring().ideal(prod(elems))) == I, "I is not saturated wrt the product of 'elems'"
     R, Iloc, elems = localize(I, elems)
     # compute a basis of K(U)[X]/I as K(U) vector space
-    basis = Iloc.normal_basis();
+    basis = Iloc.normal_basis()
     dim = len(basis);
     determinants = [multiplication_matrix_det(Iloc, basis, elem) for elem in elems]
     R, I, det_sqrts = extend_by_roots(Iloc, determinants, dim)
     elems = [R(f) for f in elems]
     # divide the elements by the square roots of the determinants
     new_elems = [a*b for a,b in zip(elems, det_sqrts)]
-    new_elems = [f.reduce(I) for f in new_elems]
     root = generator_nth_roots_of_unity(R.base_ring().base_ring(), dim)
     if root != 1:
-        lattice = exponent_lattice_zero_dim(I, new_elems+[R(root)]);
+        lattice = exponent_lattice_zero_dim(I, new_elems+[R(root)])
         projected_gens = [gen[:-1] for gen in lattice.gens()]
         lattice = IntegerLattice(projected_gens)
     else:
         lattice = exponent_lattice_zero_dim(I, new_elems)
     coeff_ring = R.base_ring()
+    # the coefficient field is of the form K(U)
     if coeff_ring.base_ring() != coeff_ring:
         # map determinants from K(U) to K[U]
         field_elems = []
@@ -526,8 +640,8 @@ def unit_lattice_zero_dim(I, elems :list):
             num_coeff = det.numerator().lc()
             denom_coeff = det.denominator().lc()
             field_elems.append(coeff_ring((det.numerator()/num_coeff)/(det.denominator()/denom_coeff)))
-        lattice = lattice.intersection(exponent_lattice_polynomials(field_elems))
-    images = [];
+        lattice = lattice.intersection(exponent_lattice_fraction_field(field_elems))
+    images = []
     for gen in lattice.gens():
         power_prod = 1
         for i in range(len(gen)):
@@ -535,12 +649,13 @@ def unit_lattice_zero_dim(I, elems :list):
                 power_prod *= elems[i].inverse_mod(Iloc)**(-gen[i])
             else:
                 power_prod *= elems[i]**gen[i]
-        image = power_prod.reduce(Iloc)
+        image = power_prod.reduce(Iloc.groebner_basis())
         image = image.lc()
         if not R.base_ring().is_prime_field():
             image = image.numerator().lc()
-        images.append(R.base_ring().base_ring()(image))
-    return lattice, images;
+        base_field = R.base_ring().prime_subfield()
+        images.append(base_field(image))
+    return UnitLattice(base_field, lattice.gens(), images)
 
 
 def factor_over_extension(I, f):
@@ -736,42 +851,10 @@ def multiplication_matrix_det(I, basis : list, element):
     return matrix(mat).det()
 
 
-def intersection_wrt_character(field, lattice1, lattice2, images1, images2):
-    """
-    Computes the intersection of two lattices with respect to given characters
-    Args:
-        field : A field K
-        lattice1: An integer lattice
-        lattice2: An integer lattice
-        images1: The images of the basis elements of lattice1 under the character lattice1 -> K*
-        images2: The images of the basis elements of lattice2 under the character lattice2 -> K*
-
-    Returns:
-        The intersection with respect to the lattices and the associated character given
-        by the images of the basis elements
-    """
-    intersection = lattice1.intersection(lattice2);
-    images_intersection1 = [];
-    images_intersection2 = [];
-    for row in intersection.basis_matrix().rows():
-        images_intersection1.append(prod([a**b for a,b in zip(images1, lattice1.coordinates(row))]))
-        images_intersection2.append(prod([a**b for a,b in zip(images2, lattice2.coordinates(row))]))
-    if field == QQ:
-        exp_lattice = exponent_lattice_rationals([a/b for a,b in zip(images_intersection1, images_intersection2)]);
-    elif field.is_finite():
-        exp_lattice = exponent_lattice_finite_field(field, [a/b for a,b in zip(images_intersection1, images_intersection2)]);
-    else:
-        raise Exception("Not Yet Implemented")
-    lattice = [];
-    for row in exp_lattice.basis_matrix().rows():
-        lattice.append(sum([a*b for a,b in zip(row, intersection.basis())]))
-    images = [];
-    for row in lattice:
-        images.append(prod([a**b for a,b in zip(images1, lattice1.coordinates(row))]))
-    return IntegerLattice(lattice), images;
 
 
-def exponent_lattice_polynomials(elements :list):
+def exponent_lattice_fraction_field(elements : list):
+    ''' computes the exponent lattice of a list of elements of a fraction field K(U) '''
     cleared_elements = []
     coeffs = []
     for el in elements:
