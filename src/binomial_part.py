@@ -422,11 +422,11 @@ def st_binomial_part(s,t, I, cellular : list, unitary = True):
     # the affine solution space is given by u_1+U
     U = matrix(ZZ, [last_components]).right_kernel()
     u_1 = ext_gcd(last_components)
-    exponents = (matrix(first_components).transpose())*(matrix(u_1).transpose())
-    exponents = exponents.columns()
+    exponents = matrix(u_1)*matrix(first_components)
+    exponents = exponents.rows()
     for gen in U.gens():
         u = [a+b for a,b in zip(u_1, gen)]
-        exponents += ((matrix(first_components).transpose())*(matrix(u).transpose())).columns()
+        exponents += (matrix(u)*matrix(first_components)).rows()
     return lattice_to_st_binomials(I.ring(), exponents, [lattice.character(e) for e in exponents], s, t, cellular).gens()
 
 
