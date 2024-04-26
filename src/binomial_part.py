@@ -41,11 +41,16 @@ class UnitLattice:
             images: A list of elements in K* representing the images of the generators of L
                 under the associated character L -> K*
         """
+        if not field.is_prime_field():
+            raise Exception("Not Yet Implemented")
         generators, images = self.__remove_dependent(generators, images)
         self.lattice = IntegerLattice(generators)
         self.field = field
         self.images = images
         self.__update_images(generators)
+
+    def __repr__(self):
+        return "Unit lattice over "+ str(self.field) + " with images " + str(self.images) + "\nbasis matrix:\n"+str(self.lattice.basis_matrix())
 
     def gens(self):
         return self.lattice.gens()
@@ -66,12 +71,13 @@ class UnitLattice:
             self.images.append(prod([a**b for a,b in zip(old_images, coordinates)]))
 
     def __remove_dependent(self, generators, images):
-        M = FreeModule(ZZ, len(generators[0]))
-        generators = [vector(ZZ, l) for l in generators]
-        generators = [v for v in generators if not v.is_zero()]
-        while M.are_linearly_dependent(generators):
-            generators = generators[:-1]
-            images = images[:-1]
+        if len(generators) > 0:
+            M = FreeModule(ZZ, len(generators[0]))
+            generators = [vector(ZZ, l) for l in generators]
+            generators = [v for v in generators if not v.is_zero()]
+            while M.are_linearly_dependent(generators):
+                generators = generators[:-1]
+                images = images[:-1]
         return generators, images
 
     def elim_last(self):
@@ -105,40 +111,21 @@ class UnitLattice:
             images.append(self.character(gen))
         return UnitLattice(self.field, generators, images)
 
-
-def intersection_wrt_character(field, lattice1, lattice2, images1, images2):
-    """
-    Computes the intersection of two lattices with respect to given characters
-    Args:
-        field : A field K
-        lattice1: An integer lattice
-        lattice2: An integer lattice
-        images1: The images of the basis elements of lattice1 under the character lattice1 -> K*
-        images2: The images of the basis elements of lattice2 under the character lattice2 -> K*
-
-    Returns:
-        The intersection with respect to the lattices and the associated character given
-        by the images of the basis elements
-    """
-    intersection = lattice1.intersection(lattice2);
-    images_intersection1 = [];
-    images_intersection2 = [];
-    for row in intersection.basis_matrix().rows():
-        images_intersection1.append(prod([a**b for a,b in zip(images1, lattice1.coordinates(row))]))
-        images_intersection2.append(prod([a**b for a,b in zip(images2, lattice2.coordinates(row))]))
-    if field == QQ:
-        exp_lattice = exponent_lattice_rationals([a/b for a,b in zip(images_intersection1, images_intersection2)]);
-    elif field.is_finite():
-        exp_lattice = exponent_lattice_finite_field(field, [a/b for a,b in zip(images_intersection1, images_intersection2)]);
-    else:
-        raise Exception("Not Yet Implemented")
-    lattice = [];
-    for row in exp_lattice.basis_matrix().rows():
-        lattice.append(sum([a*b for a,b in zip(row, intersection.basis())]))
-    images = [];
-    for row in lattice:
-        images.append(prod([a**b for a,b in zip(images1, lattice1.coordinates(row))]))
-    return IntegerLattice(lattice), images;
+    def lattice_ideal(self, ring):
+        """ Computes the binomial ideal associated to the unit lattice """
+        binomials = []
+        indeterminates = ring.gens()
+        generators = self.lattice.gens()
+        for i in range(len(generators)):
+            term_1 = 1
+            term_2 = 1
+            for j in range(len(indeterminates)):
+                if generators[i][j] < 0:
+                    term_2 *= indeterminates[j]**(-generators[i][j])
+                else:
+                    term_1 *= indeterminates[j]**(generators[i][j])
+            binomials.append(term_1-self.images[i]*term_2)
+        return ring.ideal(binomials).saturation(prod(indeterminates))[0]
 
 
 def cellular_decomposition(I):
@@ -439,36 +426,12 @@ def binomial_part_saturated(I, unitary=True):
         return I
     if unitary:
         lattice = exponent_lattice(I, list(R.gens()))
-        return lattice_ideal(R, lattice, len(lattice.gens())*[1])
+        field = I.base_ring()
+        lattice = UnitLattice(field, lattice.gens(), len(lattice.gens())*[field.one()])
+        return lattice.lattice_ideal(R)
     else:
         lattice = unit_lattice(I, list(R.gens()))
-        return lattice_ideal(R, lattice.lattice, lattice.images)
-
-
-def lattice_ideal(ring, lattice, images):
-    """
-    Computes the binomial ideal in a polynomial ring given a lattice and a character
-    Args:
-        ring: A polynomial ring over a field K
-        lattice: An integer lattice L
-        images: The images defining a character L -> K*
-
-    Returns:
-        The binomial ideal defined by the lattice
-    """
-    binomials = []
-    indeterminates = ring.gens()
-    generators = lattice.gens()
-    for i in range(len(generators)):
-        term_1 = 1
-        term_2 = 1
-        for j in range(len(indeterminates)):
-            if generators[i][j] < 0:
-                term_2 *= indeterminates[j]**(-generators[i][j])
-            else:
-                term_1 *= indeterminates[j]**(generators[i][j])
-        binomials.append(term_1-images[i]*term_2)
-    return ring.ideal(binomials).saturation(prod(indeterminates))[0]
+        return lattice.lattice_ideal(R)
 
 
 def lattice_to_st_binomials(ring, lattice_gens, images, s, t, Y):
@@ -600,6 +563,7 @@ def unit_lattice(I, elems):
             R = J.ring()
             latticeJ = unit_lattice_zero_dim(J, [R(f) for f in elems])
             lattice = lattice.intersection(latticeJ)
+            # Todo: Check if lattice is zero to avoid unecessary steps
     return lattice
 
 
@@ -650,9 +614,6 @@ def unit_lattice_zero_dim(I, elems :list):
             else:
                 power_prod *= elems[i]**gen[i]
         image = power_prod.reduce(Iloc.groebner_basis())
-        image = image.lc()
-        if not R.base_ring().is_prime_field():
-            image = image.numerator().lc()
         base_field = R.base_ring().prime_subfield()
         images.append(base_field(image))
     return UnitLattice(base_field, lattice.gens(), images)
@@ -696,8 +657,10 @@ def factor_over_extension(I, f):
     Runivar = PolynomialRing(R, str(t))
     return [make_monic(Runivar(g)) for g in factors]
 
+
 def make_monic(f):
     return f.lc()**-1*f
+
 
 def min_poly_inverse(I, f):
     """
@@ -784,7 +747,6 @@ def generator_nth_roots_of_unity(field, n):
         raise Exception("Not yet implemented")
 
 
-
 def get_lattice(I, elems : list):
     """
     Checks if the lattice of 'elems' modulo I can be obtained via elimination
@@ -849,8 +811,6 @@ def multiplication_matrix_det(I, basis : list, element):
     for image in images:
         mat.append([image.monomial_coefficient(b) for b in basis])
     return matrix(mat).det()
-
-
 
 
 def exponent_lattice_fraction_field(elements : list):
