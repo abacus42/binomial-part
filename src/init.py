@@ -15,3 +15,4 @@ from exponent_lattice_extension_fields import *
 from exponent_lattice_perfect_fields import *
 from exponent_lattice_zero_dim import *
 from principal_ideals import binomial_part_principal
+from z_algebras import FiniteZAlgebra

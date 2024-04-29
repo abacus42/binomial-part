@@ -17,6 +17,14 @@ from sage.arith.misc import gcd
 from sage.functions.other import floor
 
 
+def get_group_ops(I):
+    def op(f,g):
+        return (f*g).reduce(I)
+    def inv(f):
+        return f.inverse_mod(I)
+    return op, inv
+
+
 def syzygies_mod(I, elems : list):
     ''' Computes generators of the syzygy module of elems in P/I as a list of lists '''
     M = (I.ring().ideal(elems)+I).syzygy_module();

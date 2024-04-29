@@ -41,14 +41,6 @@ def exponent_lattice_rationals(elements :list):
     return L.intersection(M)
 
 
-def get_group_ops(I):
-    def op(f,g):
-        return (f*g).reduce(I)
-    def inv(f):
-        return f.inverse_mod(I)
-    return op, inv
-
-
 def primitive_element_finite(I, basis, group_order):
     """
     Args:

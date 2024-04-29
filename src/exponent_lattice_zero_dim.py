@@ -16,6 +16,7 @@ from sage.rings.integer import Integer
 from sage.arith.misc import factor
 from sage.arith.misc import gcd
 from sage.functions.other import floor
+from sage.groups.generic import multiple
 import logging
 
 from help_functions import *
