@@ -43,6 +43,8 @@ class UnitLattice:
         """
         if not field.is_prime_field():
             raise Exception("Not Yet Implemented")
+        if len(generators) != len(images):
+            raise Exception("Number of Generators And Images Do Not Coincide")
         generators, images = self.__remove_dependent(generators, images)
         self.lattice = IntegerLattice(generators)
         self.field = field
@@ -89,7 +91,8 @@ class UnitLattice:
 
     def intersection(self, other_lattice):
         """ Returns the intersection with respect to the lattices and the associated character """
-        assert self.field == other_lattice.field, "fields do not coincide"
+        if self.field != other_lattice.field:
+            raise Exception("Fields Do Not Coincide")
         intersection = self.lattice.intersection(other_lattice.lattice);
         images_intersection1 = [];
         images_intersection2 = [];
@@ -113,6 +116,10 @@ class UnitLattice:
 
     def lattice_ideal(self, ring):
         """ Computes the binomial ideal associated to the unit lattice """
+        if self.field != ring.base_ring():
+            raise Exception("Fields Do Not Coincide")
+        if self.lattice.ngens() != 0 and self.lattice.degree() != ring.ngens():
+            raise Exception("Number Of Generators Does Not Match")
         binomials = []
         indeterminates = ring.gens()
         generators = self.lattice.gens()

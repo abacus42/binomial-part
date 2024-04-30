@@ -198,6 +198,9 @@ class FiniteZAlgebra:
         self.__rank = None
         self.__smith_form = None
 
+    def __repr__(self):
+        return "FiniteZAlgebra given by "+ str(self.ideal)
+
     def module_generators(self):
         ''' computes Z-module generators of the finite Z-algebra'''
         if self.__module_generators is None:
