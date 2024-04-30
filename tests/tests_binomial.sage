@@ -16,6 +16,7 @@ tests_unitary = [
     [["x^2-y*z", "z^3+z+5"], PolynomialRing(QQ, 3, "x,y,z"), ["x^2-y*z"]],
     [["x-(y-1)*z"], PolynomialRing(QQ, 3, "x,y,z"), ["0"]],
     [["x^4+x^3*y*z^2+2*x^2*y^2*z^4+x*y^3*z^6+y^4*z^8"], PolynomialRing(QQ, 3, "x,y,z"), ["y^12*z^24-x^12"]],
+    [["x^4+x^3*y*z^2+2*x^2*y^2*z^4+x*y^3*z^6+y^4*z^8"], PolynomialRing(GF(7), 3, "x,y,z"), ["y^12*z^24-x^12"]],
     [["x^3*z^4 + x^2*y*z^2 + x*y^2", "x^2*y + x*y^2 + y^3"], PolynomialRing(QQ, 3, "x,y,z"), ["x^2*y^3*z^6 - x^2*y^3", "x*y^4*z^6 - x*y^4", "y^5*z^6 - y^5", "x^4*z^6 - x*y^3", "x^5*z^4 - x^2*y^3*z^4", "x^3*y - y^4"]]
 ]
 
@@ -38,6 +39,7 @@ tests_full = [
     [["x^2*y^2-2*x*y+2"], PolynomialRing(QQ, 2, "x,y"), ["x^4*y^4+4"]],
     [["x^2*y^2-2*x*y+2"], PolynomialRing(QQ, 3, "x,y,z"), ["x^4*y^4+4"]],
     [["x^2*y^4-2*x*y^2*z+2*z^2"], PolynomialRing(QQ, 3, "x,y,z"), ["x^4*y^8+4*z^4"]],
+    [["x^2*y^4-2*x*y^2*z+2*z^2"], PolynomialRing(GF(7), 3, "x,y,z"), ["x^4*y^8-3*z^4"]],
     #[["x^2+5", "y^3-2"], PolynomialRing(QQ, 2, "x,y"), ["x^2+5", "y^3-2"]],
     [["y^2 - 16*z^2", "x^3*y - x^3*z - y + z"], PolynomialRing(QQ, 3, "x,y,z"), ["x^3*y*z - y*z", "x^3*z^2 - z^2", "y^2 - 16*z^2"]],
     [["y^2-z^2", "x^3*y - x^3*z - y + z"], PolynomialRing(QQ, 3, "x,y,z"), ["y^2-z^2"]]

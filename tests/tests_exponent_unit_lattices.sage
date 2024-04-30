@@ -24,7 +24,9 @@ tests_unit_lattice = [
     [["x^3-y^3", "x*y-1"], PolynomialRing(QQ, 2, "x,y"), ["x","y^3"], IntegerLattice([[0,2],[3,1]]), [1,1]],
     [["x^3-y^3"], PolynomialRing(QQ, 2, "x,y"), ["x","y^3"], IntegerLattice([[3,-1]]), [1]],
     [["x^3-y^3"], PolynomialRing(QQ, 2, "x,y"), ["x","y"], IntegerLattice([[3,-3]]), [1]],
-    [["x^3-4*y^3"], PolynomialRing(QQ, 2, "x,y"), ["x","y"], IntegerLattice([[3,-3]]), [4]]
+    [["x^3-y^3"], PolynomialRing(GF(3), 2, "x,y"), ["x","y"], IntegerLattice([[3,-3]]), [1]],
+    [["x^3-4*y^3"], PolynomialRing(QQ, 2, "x,y"), ["x","y"], IntegerLattice([[3,-3]]), [4]],
+    [["x^3-3*y^3"], PolynomialRing(GF(5), 2, "x,y"), ["x","y"], IntegerLattice([[3,-3]]), [3]]
 ]
 
 for test in tests_unit_lattice:

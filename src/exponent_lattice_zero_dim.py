@@ -54,10 +54,7 @@ def pkth_root(f, k, levels):
         for mon in f.monomials():
             coeff = f.monomial_coefficient(mon).numerator();
             for coeff_mon in coeff.monomials():
-                if coeff_base.ngens() == 1:
-                    exponents = coeff_mon.exponents();
-                else:
-                    exponents = coeff_mon.exponents()[0]; #in the multivariate case 'exponents' returns a list of tuples
+                exponents = coeff_mon.exponents()[0]
                 for i in range(len(exponents)):
                     if exponents[i] != 0:
                         mult = factor_multiplicity(exponents[i], p);
@@ -68,18 +65,12 @@ def pkth_root(f, k, levels):
             new_coeff = R.base_ring().zero();
             for coeff_mon in coeff.monomials():
                 coeff_coeff = coeff.monomial_coefficient(coeff_mon)**(p**k);
-                if coeff_base.ngens() == 1:
-                    exponents = coeff_mon.exponents();
-                else:
-                    exponents = coeff_mon.exponents()[0]; #in the multivariate case 'exponents' returns a list of tuples
+                exponents = coeff_mon.exponents()[0];
                 new_exponents = [0] * len(exponents);
                 for i in range(len(exponents)):
                     if exponents[i] != 0:
                         new_exponents[i] = Integer(exponents[i]/(p**(k-levels[i])));
-                if coeff_base.ngens() == 1:
-                    new_exponents = new_exponents[0];
-                else:
-                    new_exponents = tuple(new_exponents);
+                new_exponents = tuple(new_exponents);
                 new_coeff += coeff_coeff*coeff_base({new_exponents:1});
             result += new_coeff*mon.nth_root(p**k);
     return result, levels;
@@ -128,7 +119,7 @@ def separable_part(f, levels):
 def scale(f, scale_levels, levels):
     """
     Args:
-        f: A polynomial in GF(p)(t_1,...,t_s)[x_1,...,x_n] whose coefficients have denominator one
+        f: A polynomial in GF(p)(t_1,...,t_s)[x_1,...,x_n]
         scale_levels: A list of integers representing the target field extension
         levels: A list of integers representing the field extension in which f
         currently lives
@@ -136,29 +127,28 @@ def scale(f, scale_levels, levels):
     Returns:
         A polynomial corresponding to f in the "larger" field extension
     """
-    R = f.parent();
-    p = R.characteristic();
-    coeff_base = R.base_ring().base();
-    result = R.zero();
+    R = f.parent()
+    scaled_f = R.zero()
     for mon in f.monomials():
-        coeff = f.monomial_coefficient(mon).numerator();
-        scaled_coeff = coeff_base.zero();
-        for coeff_mon in coeff.monomials():
-            if coeff_base.ngens() == 1:
-                exponents = coeff_mon.exponents();
-            else:
-                #in the multivariate case 'exponents' returns a list of tuples
-                exponents = list(coeff_mon.exponents()[0]);
-            for i in range(len(exponents)):
-                if exponents[i] != 0 and levels[i] < scale_levels[i]:
-                    exponents[i] = exponents[i]*(p**(scale_levels[i]-levels[i]));
-            if coeff_base.ngens() == 1:
-                exponents = exponents[0];
-            else:
-                exponents = tuple(exponents);
-            scaled_coeff += coeff.monomial_coefficient(coeff_mon)*coeff_base({exponents:1});
-        result += scaled_coeff*mon;
-    return result;
+        coeff = f.monomial_coefficient(mon)
+        scaled_numerator = scale_polynomial(coeff.numerator(), scale_levels, levels)
+        scaled_denominator = scale_polynomial(coeff.denominator(), scale_levels, levels)
+        scaled_f += (scaled_numerator/scaled_denominator)*mon
+    return scaled_f
+
+
+def scale_polynomial(f, scale_levels, levels):
+    R = f.parent()
+    p = R.characteristic()
+    scaled_f = R.zero()
+    for mon in f.monomials():
+        exponents = list(mon.exponents()[0])
+        for i in range(len(exponents)):
+            if exponents[i] != 0 and levels[i] < scale_levels[i]:
+                exponents[i] = exponents[i]*(p**(scale_levels[i]-levels[i]))
+        exponents = tuple(exponents)
+        scaled_f += f.monomial_coefficient(mon)*R({exponents:1})
+    return scaled_f
 
 
 def nil_index(I, el):
@@ -225,24 +215,24 @@ def separable_decomposition_non_perfect(I, elems):
         A list of lists, where each list has the form [sep, nil] and sep+nil is the decomposition
         of the element into its separable and nilpotent part in P/I
     """
-    coeff_base = I.base_ring().base();
-    unscaled_parts = [];
-    levels_list = [];
+    coeff_base = I.base_ring().base()
+    unscaled_parts = []
+    levels_list = []
     n = coeff_base.ngens()
     for f in elems:
-        min_poly = minimal_polynomial(I, f).univariate_polynomial();
-        levels = [0]*n;
-        sep_part, levels = separable_part(min_poly, levels);
-        unscaled_parts.append(sep_part);
-        levels_list.append(levels);
-    max_levels = [0]*n;
+        min_poly = minimal_polynomial(I, f).univariate_polynomial()
+        levels = [0]*n
+        sep_part, levels = separable_part(min_poly, levels)
+        unscaled_parts.append(sep_part)
+        levels_list.append(levels)
+    max_levels = [0]*n
     for i in range(coeff_base.ngens()):
-        max_levels[i] = max([levels[i] for levels in levels_list]);
-    sep_parts = [scale(unscaled_parts[i], max_levels, levels_list[i]) for i in range(len(elems))];
-    scaled_gens = [scale(f, max_levels, [0]*n) for f in I.gens()];
-    elems = [scale(f, max_levels, [0]*n) for f in elems];
-    scaledI = I.ring().ideal(scaled_gens);
-    return compute_decomposition(scaledI, elems, sep_parts), scaledI;
+        max_levels[i] = max([levels[i] for levels in levels_list])
+    sep_parts = [scale(unscaled_parts[i], max_levels, levels_list[i]) for i in range(len(elems))]
+    scaled_gens = [scale(f, max_levels, [0]*n) for f in I.gens()]
+    elems = [scale(f, max_levels, [0]*n) for f in elems]
+    scaledI = I.ring().ideal(scaled_gens)
+    return compute_decomposition(scaledI, elems, sep_parts), scaledI
 
 
 def unipotent_lattice_0(I, elems):

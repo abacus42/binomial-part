@@ -11,7 +11,7 @@ assert scale(x-u, [2,2], [1,0]) == x-u^3, str(x-u)
 assert scale(u*x-t*y, [2,2],[2,2]) == u*x-t*y, str(u*x-t*y)
 assert scale(u^2*x-t*y, [3,1], [0,0]) == (u^54)*x + (-t^3)*y, str(u^2*x-t*y)
 
-K = FractionField(PolynomialRing(GF(5), 't'))
+K = FractionField(PolynomialRing(GF(5), 't', 1))
 K.inject_variables()
 R.<x> = K[]
 assert separable_part((x^5-t)*(x^5-t^5), [0]) == ((x-t)*(x-t^5), [1])

@@ -499,7 +499,9 @@ def reduction_to_zero_dim(I, elems : list):
             coeff_indets.append(R.variable_names()[i]);
         else:
             remaining_indets.append(R.variable_names()[i]);
-    coeff_ring = FractionField(PolynomialRing(R.base_ring(), coeff_indets));
+    # the parameter len(coeff_indets) is important!
+    # otherwise the base ring of the fraction field might be treated as univariate
+    coeff_ring = FractionField(PolynomialRing(R.base_ring(), coeff_indets, len(coeff_indets)));
     Q = PolynomialRing(coeff_ring, remaining_indets, len(remaining_indets));
     leading_coeffs = [Q(str(f)).lc() for f in GB];
     h = lcm([R(f) for f in leading_coeffs]);
