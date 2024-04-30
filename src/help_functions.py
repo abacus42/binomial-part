@@ -198,11 +198,10 @@ def process_factorizations(elements :list):
     return factorizations, all_factors;
 
 def my_saturation(I,J):
-    i = 0
-    old = I
-    sat = I.quotient(J)
-    while sat != old:
-        i += 1
-        old = sat
-        sat = sat.quotient(J)
-    return (sat, i)
+    sat, index = I.saturation(J)
+    if index == 0:
+        return sat, index
+    # the returned index might not be minimal
+    while sat == I.quotient(J**(index-1)):
+        index -= 1
+    return sat, index

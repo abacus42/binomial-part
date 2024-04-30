@@ -153,10 +153,10 @@ def scale_polynomial(f, scale_levels, levels):
 
 def nil_index(I, el):
     ''' Computes the smallest number i such that el^i is in I '''
-    i = 1;
-    while not el**i in I:
-        i += 1;
-    return i;
+    R = I.ring()
+    sat, index = my_saturation(I, R.ideal(el))
+    assert sat.is_one(), "No power of the polynomial is contained in the ideal"
+    return index
 
 
 def compute_decomposition(I, elems, sep_parts):
