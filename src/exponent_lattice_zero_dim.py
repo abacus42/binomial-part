@@ -250,8 +250,8 @@ def unipotent_lattice_0(I, elems):
         log = I.ring().zero();
         j = 1;
         while not (f-1)**j in I:
-            log += R((1/j)*(f-1)**j);
-            j += 1;
+            log += R(1/j)*(f-1)**j
+            j += 1
         logarithms.append(I.reduce(log));
     logarithms = clear_denominators(logarithms)
     log_support = set([mon for f in logarithms for mon in f.monomials()]);

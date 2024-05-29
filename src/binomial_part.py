@@ -613,8 +613,10 @@ def unit_lattice_zero_dim(I, elems :list):
             num_coeff = det.numerator().lc()
             denom_coeff = det.denominator().lc()
             field_elems.append(coeff_ring((det.numerator()/num_coeff)/(det.denominator()/denom_coeff)))
-        lattice = lattice.intersection(exponent_lattice_fraction_field(field_elems))
+        coeff_lattice = exponent_lattice_fraction_field(field_elems)
+        lattice = lattice.intersection(coeff_lattice)
     images = []
+    base_field = R.base_ring().prime_subfield()
     for gen in lattice.gens():
         power_prod = 1
         for i in range(len(gen)):
@@ -623,7 +625,6 @@ def unit_lattice_zero_dim(I, elems :list):
             else:
                 power_prod *= elems[i]**gen[i]
         image = power_prod.reduce(Iloc.groebner_basis())
-        base_field = R.base_ring().prime_subfield()
         images.append(base_field(image))
     return UnitLattice(base_field, lattice.gens(), images)
 

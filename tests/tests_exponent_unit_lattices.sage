@@ -6,7 +6,9 @@ tests_exponent_lattice = [
     [["y-5*x-3", "x^2-x-1"], PolynomialRing(QQ, 2, "x,y"), ["x", "y"], IntegerLattice([[5,-1]]), exponent_lattice_number_field_max],
     [["x-y+1", "y^2-3*y+1"], PolynomialRing(GF(7), 2, "x,y"), ["x", "y"], IntegerLattice([[2,-1], [4,6]]), exponent_lattice_finite_field_max],
     [["x^2+x+1", "y^2+y+1", "z^2"], PolynomialRing(QQ, 3, "x,y,z"), ["1","y+1", "-y*z-z+1", "x+1", "-x*y*z-x*z+1", "x*z+1", "z+1"],
-    IntegerLattice([(1,0,0,0,0,0,0), (0,3,0,3,0,0,0), (0,0,0,6,0,0,0)]), exponent_lattice]
+    IntegerLattice([(1,0,0,0,0,0,0), (0,3,0,3,0,0,0), (0,0,0,6,0,0,0)]), exponent_lattice],
+    [["(x^2+1)^3*(y*x+4)^2-(z^2+1)"], PolynomialRing(QQ, 3, "x,y,z"), ["x^2+1", "y*x+4", "z^2+1"],
+    IntegerLattice([(3,2,-1)]), exponent_lattice]
 ]
 
 for test in tests_exponent_lattice:

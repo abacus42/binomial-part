@@ -71,10 +71,12 @@ def compute_presentation(I, elems : list):
     # K
     perfect_field = fraction_field.base_ring()
     generators = list(I.gens()).copy()
+    denominators = []
     for i in range(len(generators)):
         coeffs = generators[i].coefficients()
         denom_lcm = lcm([c.denominator() for c in coeffs])
         generators[i] = denom_lcm* generators[i]
+        denominators.append(denom_lcm)
     # form the ring K[y_1,...y_k+1,a_1,...,a_s,x_1,...x_n]
     var_names_y = tuple(['y%s'%k for k in range(1, len(elems)+2)])
     var_names = var_names_y + underlying_ring.variable_names()
@@ -89,11 +91,13 @@ def compute_presentation(I, elems : list):
         denom_lcm = lcm([c.denominator() for c in coeffs])
         cleared_denoms = denom_lcm * elems[i]
         J += R_elim.ideal(R_elim(str(denom_lcm))*indeterminates[i]-R_elim(str(cleared_denoms))*indeterminates[k])
+        denominators.append(denom_lcm)
+    # sq_free = prod(denominators).radical()
     R_elim = extend_ring(R_elim, "inv")
     J = J.change_ring(R_elim)
     inv = R_elim.gens()[-1]
     indet_prod = prod(list(underlying_ring.gens()))
-    J += R_elim.ideal(R_elim(str(indet_prod))*inv-1)
+    J += R_elim.ideal(R_elim(str(prod(indeterminates)))*inv-1)
     indeterminates = R_elim.gens()
     Jelim = J.elimination_ideal(indeterminates[k+1:])
     # form the ring K[y_1,...y_k+1]
