@@ -71,12 +71,14 @@ def compute_presentation(I, elems : list):
     # K
     perfect_field = fraction_field.base_ring()
     generators = list(I.gens()).copy()
-    denominators = []
+    make_invertible = []
     for i in range(len(generators)):
         coeffs = generators[i].coefficients()
         denom_lcm = lcm([c.denominator() for c in coeffs])
         generators[i] = denom_lcm* generators[i]
-        denominators.append(denom_lcm)
+        make_invertible.append(denom_lcm)
+    for gen in generators:
+        make_invertible.append(gen.lc())
     # form the ring K[y_1,...y_k+1,a_1,...,a_s,x_1,...x_n]
     var_names_y = tuple(['y%s'%k for k in range(1, len(elems)+2)])
     var_names = var_names_y + underlying_ring.variable_names()
@@ -91,13 +93,9 @@ def compute_presentation(I, elems : list):
         denom_lcm = lcm([c.denominator() for c in coeffs])
         cleared_denoms = denom_lcm * elems[i]
         J += R_elim.ideal(R_elim(str(denom_lcm))*indeterminates[i]-R_elim(str(cleared_denoms))*indeterminates[k])
-        denominators.append(denom_lcm)
-    # sq_free = prod(denominators).radical()
-    R_elim = extend_ring(R_elim, "inv")
-    J = J.change_ring(R_elim)
-    inv = R_elim.gens()[-1]
-    indet_prod = prod(list(underlying_ring.gens()))
-    J += R_elim.ideal(R_elim(str(prod(indeterminates)))*inv-1)
+        make_invertible.append(denom_lcm)
+    sq_free = R_elim(str(prod(make_invertible))).radical()
+    R_elim, J = localize(J, [sq_free])[0:2]
     indeterminates = R_elim.gens()
     Jelim = J.elimination_ideal(indeterminates[k+1:])
     # form the ring K[y_1,...y_k+1]
@@ -152,7 +150,8 @@ def exponent_lattice_extension_field(I, elems : list):
         rep_coeffs = f.lift(repr_ideal)
         rep_coeffs = [c for c in rep_coeffs[:len(module_gens)]]
         field_elems.append(scalar_product(rep_coeffs, [1]+list(S_closure_ring.gens()[len(elems)+1:])))
-    elim_ring = PolynomialRing(coeff_ring, S_closure_ring.variable_names()+tuple(['f%s'%k for k in range(1, len(field_elems)+1)]))
+    indeterminates = S_closure_ring.variable_names()+tuple(['f%s'%k for k in range(1, len(field_elems)+1)])
+    elim_ring = PolynomialRing(coeff_ring, indeterminates)
     field_ideal = S_closure_ideal.change_ring(elim_ring)
     field_ideal += elim_ring.ideal([elim_ring(field_elems[-i])-elim_ring.gens()[-i] for i in range(1,len(field_elems)+1)])
     field_ideal = field_ideal.elimination_ideal(elim_ring.gens()[:-len(field_elems)])

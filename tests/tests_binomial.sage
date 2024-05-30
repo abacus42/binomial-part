@@ -42,7 +42,8 @@ tests_full = [
     [["x^2*y^4-2*x*y^2*z+2*z^2"], PolynomialRing(GF(7), 3, "x,y,z"), ["x^4*y^8-3*z^4"]],
     #[["x^2+5", "y^3-2"], PolynomialRing(QQ, 2, "x,y"), ["x^2+5", "y^3-2"]],
     [["y^2 - 16*z^2", "x^3*y - x^3*z - y + z"], PolynomialRing(QQ, 3, "x,y,z"), ["x^3*y*z - y*z", "x^3*z^2 - z^2", "y^2 - 16*z^2"]],
-    [["y^2-z^2", "x^3*y - x^3*z - y + z"], PolynomialRing(QQ, 3, "x,y,z"), ["y^2-z^2"]]
+    [["y^2-z^2", "x^3*y - x^3*z - y + z"], PolynomialRing(QQ, 3, "x,y,z"), ["y^2-z^2"]],
+    [["x1 - x4", "x3*x4 - x4*x5 - x2", "x3^2 - 2*x3*x5 + x5^2 - x4"], PolynomialRing(QQ, 5, "x1,x2,x3,x4,x5"), ["x4^3 - x2^2", "x1 - x4"]]
 ]
 
 for test in tests_full:
