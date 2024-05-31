@@ -121,24 +121,9 @@ sage: load('init.py')
   sage: R.<x,y> = QQ[]
   sage: I = R.ideal(x^2*y^2-2*x*y+2)
   sage: unit_lattice(I, [x,y])
-  (Free module of degree 2 and rank 1 over Integer Ring
-  Echelon basis matrix:
-  [4 4],
-  [-4])
-  ```
-* ``lattice_ideal(ring, lattice, images)``
-
-  Returns the lattice ideal defined by a lattice and an associated character. It takes
-  the following parameters.
-  + ring — a polynomial ring in n indeterminates
-  + lattice — a lattice in Z^n
-  + images — a list of elements of the coefficient field, defining an associated character
-  ```
-  sage: R.<x,y> = QQ[]
-  sage: L = IntegerLattice([[4,4]])
-  sage: lattice_ideal(R, L, [-4])
-  Ideal (x^4*y^4 + 4) of Multivariate Polynomial Ring in x, y over
-  Rational Field
+  Unit lattice over Rational Field with images [-4]
+  basis matrix:
+  [4 4]
   ```
 
 The package is developed by [Florian Walsh](mailto:florian.walsh@uni-passau.de)
