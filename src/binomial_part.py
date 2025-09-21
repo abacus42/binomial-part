@@ -316,8 +316,16 @@ def binomials_in_T(I, terms, unitary=True):
     Returns:
         All binomials in I whose support is contained in 'terms'
     """
-    pairs = list(combinations(terms,2))
     binomials = []
+    cleaned_terms = []
+    for term in terms:
+        if term in I:
+            binomials.append(term)
+        else:
+            cleaned_terms.append(term)
+    if len(cleaned_terms) < 2:
+        return []
+    pairs = list(combinations(cleaned_terms,2))
     for pair in pairs:
         if unitary:
             f = pair[0]-pair[1]
