@@ -16,8 +16,9 @@ sage: load('init.py')
 ## Functions
 * ``binomial_part(ideal, unitary=True)``
 
-  This function computes the binomial part of the input ideal. By default it only computes the unitary binomial part of I.
-  To compute the full binomial part the second parameter has to be set to false.
+  This function computes the binomial part of the input ideal. By default it only computes the full binomial part of I.
+  To compute only the unitary binomial part (which can in some cases be much faster) the second parameter has to be
+  set to true.
   ```
   sage: R.<x,y,z> = QQ[]
   sage: I = R.ideal((x-z)^2, 10*x-y-9*z)
@@ -26,9 +27,8 @@ sage: load('init.py')
   ```
 * ``binomial_part_radical(ideal, unitary=True)``
 
-  This function computes the binomial part of the radical of the input ideal. By default
-  it only computes the unitary binomial part. To compute the full binomial part the
-  second parameter has to be set to false.
+  This function computes the binomial part of the radical of the input ideal. To compute only the unitary binomial
+  part the second parameter has to be set to true.
   ```
   sage: R.<x> = QQ[]
   sage: I = R.ideal((x^2+x+1)^2)

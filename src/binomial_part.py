@@ -181,7 +181,7 @@ def cellular_decomposition(I):
     return decomposition;
 
 
-def binomial_part(I, unitary=True):
+def binomial_part(I, unitary=False):
     ''' Computes the binomial part of the ideal 'I' '''
     R = I.ring()
     if not R.base_ring().is_field():
@@ -256,7 +256,7 @@ def binomial_part(I, unitary=True):
     return R.ideal(result.interreduced_basis());
 
 
-def binomial_part_radical(I, unitary=True):
+def binomial_part_radical(I, unitary=False):
     ''' Computes the binomial part of a radical ideal 'I' '''
     R = I.ring()
     if not R.base_ring().is_field():
@@ -305,7 +305,7 @@ def binomial_part_radical(I, unitary=True):
     return R.ideal(result.interreduced_basis());
 
 
-def binomials_in_T(I, terms, unitary=True):
+def binomials_in_T(I, terms, unitary=False):
     """
     This function computes all binomials in I whose support is contained in 'terms'
     Args:
@@ -365,7 +365,7 @@ def terms_below(R, max_exps : list, cellular : list):
     return [R(t) for t in terms];
 
 
-def st_binomial_part(s,t, I, cellular : list, unitary = True):
+def st_binomial_part(s,t, I, cellular : list, unitary = False):
     """
     Computes the binomials of the form su-vt in I where u,v are terms in the indeterminates cellular
     Args:
@@ -432,7 +432,7 @@ def st_binomial_part(s,t, I, cellular : list, unitary = True):
     return lattice_to_st_binomials(I.ring(), exponents, [lattice.character(e) for e in exponents], s, t, cellular).gens()
 
 
-def binomial_part_saturated(I, unitary=True):
+def binomial_part_saturated(I, unitary=False):
     """ Computes the binomial part of an ideal I which is saturated wrt the product of indeterminates """
     R = I.ring()
     assert I.quotient(R.ideal(prod(R.gens()))) == I, "I is not saturated wrt the indeterminates"

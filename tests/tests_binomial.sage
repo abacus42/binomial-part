@@ -24,7 +24,7 @@ for test in tests_unitary:
     R = test[1]
     I = R.ideal(test[0])
     bin_part = R.ideal(test[2])
-    result = binomial_part(I)
+    result = binomial_part(I, True)
     assert  result <= I, str(I)
     assert  bin_part == result, str(I)
 
@@ -43,7 +43,8 @@ tests_full = [
     #[["x^2+5", "y^3-2"], PolynomialRing(QQ, 2, "x,y"), ["x^2+5", "y^3-2"]],
     [["y^2 - 16*z^2", "x^3*y - x^3*z - y + z"], PolynomialRing(QQ, 3, "x,y,z"), ["x^3*y*z - y*z", "x^3*z^2 - z^2", "y^2 - 16*z^2"]],
     [["y^2-z^2", "x^3*y - x^3*z - y + z"], PolynomialRing(QQ, 3, "x,y,z"), ["y^2-z^2"]],
-    [["x1 - x4", "x3*x4 - x4*x5 - x2", "x3^2 - 2*x3*x5 + x5^2 - x4"], PolynomialRing(QQ, 5, "x1,x2,x3,x4,x5"), ["x4^3 - x2^2", "x1 - x4"]]
+    [["x1 - x4", "x3*x4 - x4*x5 - x2", "x3^2 - 2*x3*x5 + x5^2 - x4"], PolynomialRing(QQ, 5, "x1,x2,x3,x4,x5"), ["x4^3 - x2^2", "x1 - x4"]],
+    [["x^3-3*x*y^2-y^3", "x^2*y+y^2*x", "y^4", "x*y^3"], PolynomialRing(QQ, 2, "x,y"), ["x^4", "x*y^3", "y^4", "x^2*y + x*y^2"]]
 ]
 
 for test in tests_full:
